@@ -1,0 +1,18 @@
+@startuml
+start
+repeat
+  :Read from topic;
+  :Process message;
+  if (Processing successful?) then (no)
+    :Increment attempt number;
+    if (Attempt < threshold?) then (yes)
+      :Send to retry topic;
+    else (no)
+      :Send to error topic;
+    endif
+else (yes)
+   stop
+  endif
+repeat while (Attempt < threshold?)
+stop
+@enduml
