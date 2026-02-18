@@ -1,0 +1,29 @@
+@startuml submissions
+skinparam style strictuml
+    title "Submissions"
+    !$COLOR_KAFKA = "#green"
+    !$COLOR_HTTP = "#red"
+    participant "Transaction API \n<font color=purple>(Lang: Java)" as transaction_api
+    participant "Filing Resource Handler \n<font color=purple>(Lang: Go)" as filing_resource_handler
+    participant "Chips Filing Consumer \n<font color=purple>(Lang: Go)" as chips_filing_consumer
+    participant "Filing Notification Sender \n<font color=purple>(Lang: GO)" as filing_notification_sender
+    participant "Notification Sender \n<font color=purple>(Lang: Go)" as notification_sender
+    participant "Email Sender \n<font color=purple>(Lang: Go)" as email_sender
+    participant "CHIPS \n<font color=purple>(Lang: Java)" as chips
+    autonumber
+    transaction_api [$COLOR_KAFKA]-> filing_resource_handler: tx-closed<font color=purple>(0.10 )
+    filing_resource_handler [$COLOR_HTTP]-> transaction_api: GET [Transactions API URL]/private/[Transaction URL (from Kafka message)]
+    loop for each resource in the response
+         filing_resource_handler [$COLOR_HTTP]-> transaction_api: GET [filing generator URL]/private/[resource.links.resource]/filings
+         loop for each filing in the response
+          alt If new submissions
+              filing_resource_handler [$COLOR_HTTP]-> transaction_api: PATCH [Transactions API URL]/private/[Transaction URL (from Kafka message)]
+          end
+          end
+    end
+    filing_resource_handler [$COLOR_KAFKA]-> chips_filing_consumer: filing-received<font color=purple>**(0.10)**
+    chips_filing_consumer  [$COLOR_HTTP]-> chips: POST /eFilingXml/postFormXml
+    filing_resource_handler [$COLOR_KAFKA]-> filing_notification_sender: filing-received<font color=purple>**(0.10)**
+    filing_notification_sender [$COLOR_KAFKA]->  notification_sender: message-send<font color=purple>**(0.10)**
+    notification_sender [$COLOR_KAFKA]-> email_sender: email-send<font color=purple>**(0.10)**
+@enduml
