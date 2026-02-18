@@ -1,0 +1,17 @@
+@startuml message_processing
+start
+  :Make GET request with data and obtain response;
+  while (More responses to process?) is (yes)
+    :Make GET request with link data extracted from response and get filing response;
+    while (More filing responses to process?) is (yes)
+      if (new Submission?) then (yes)
+        :Add request to list of request to be PATCH;
+      else (no)
+        :Continue processing;
+      endif
+    endwhile
+  endwhile
+  :If any PATCH request then call patch;
+  :Produce Message;
+stop
+@enduml
