@@ -1,8 +1,8 @@
-@startuml message_processing
+@startuml processing message via transaction_closed topic
 start
-  :Make GET request with data and obtain response;
+  :Make GET request to Transaction API and obtain response;
   while (More responses to process?) is (yes)
-    :Make GET request with link data extracted from response and get filing response;
+    :Make GET request to filing API with link data extracted from response and get filing response;
     while (More filing responses to process?) is (yes)
       if (new Submission?) then (yes)
         :Add request to list of request to be PATCH;
@@ -10,8 +10,11 @@ start
         :Continue processing;
       endif
     endwhile
-  endwhile
-  :If any PATCH request then call patch;
-  :Produce Message;
+  if (any PATCH request?) then (yes)
+    :Call patch;
+  else (no)
+    :Continue processing;
+  endif
+  :Produce Message to filing_received topic ;
 stop
 @enduml

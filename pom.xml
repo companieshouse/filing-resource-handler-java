@@ -12,8 +12,8 @@
     </parent>
     <properties>
         <kafka-models.version>3.0.29</kafka-models.version>
-        <private-api-sdk-java.version>4.0.454</private-api-sdk-java.version>
-        <structured-logging.version>3.0.50</structured-logging.version>
+        <private-api-sdk-java.version>4.0.466</private-api-sdk-java.version>
+        <structured-logging.version>3.0.51</structured-logging.version>
         <aspectjweaver-version>1.9.25.1</aspectjweaver-version>
         <avro-version>1.12.1</avro-version>
         <commons-lang3-version>3.20.0</commons-lang3-version>

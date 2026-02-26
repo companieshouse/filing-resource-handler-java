@@ -29,10 +29,9 @@ import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 class LoggingKafkaListenerAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
-    private static final String LOG_MESSAGE_RECEIVED = "Processing message";
-    private static final String LOG_MESSAGE_PROCESSED = "Processed message";
+    private static final String LOG_MESSAGE_RECEIVED = "Processed tx-closed message";
+    private static final String LOG_MESSAGE_PROCESSED = "Processed tx-closed message";
     private static final String EXCEPTION_MESSAGE = "%s exception thrown";
-
     private final int maxAttempts;
 
     LoggingKafkaListenerAspect(@Value("${maximum.retry.attempts}") int maxAttempts) {
