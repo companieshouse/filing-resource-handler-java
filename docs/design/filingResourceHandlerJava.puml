@@ -1,0 +1,39 @@
+title "Submissions"
+    !$COLOR_KAFKA = "#green"
+    !$COLOR_HTTP = "#red"
+    participant "Transaction API \n<font color=purple>" as transaction_api
+    participant "Filing Resource Handler \n<font color=purple>" as filing_resource_handler
+    participant "Chips Filing Consumer \n<font color=purple>" as chips_filing_consumer
+    participant "Filing Notification Sender \n<font color=purple>" as filing_notification_sender
+    participant "Notification Sender \n<font color=purple>" as notification_sender
+    participant "Email Sender \n<font color=purple>" as email_sender
+    participant "CHIPS \n<font color=purple>" as chips
+
+autonumber
+
+transaction_api -[$COLOR_KAFKA]> filing_resource_handler: tx-closed
+filing_resource_handler -[$COLOR_HTTP]> transaction_api: GET /private/[Transaction URL]
+
+loop for each resource in the response
+    filing_resource_handler -[$COLOR_HTTP]> transaction_api: GET [filing generator URL]/.../filings
+
+    loop for each filing in the response
+        alt If new submissions
+            filing_resource_handler -> filing_resource_handler: Add to list of requests to be patched
+        else
+            filing_resource_handler -> filing_resource_handler: Continue processing
+        end
+
+    alt If list of requests to be patched is not empty
+        filing_resource_handler -[$COLOR_HTTP]> transaction_api: PATCH /private/[Transaction URL]
+    end
+
+
+filing_resource_handler -[$COLOR_KAFKA]> chips_filing_consumer: filing-received
+chips_filing_consumer -[$COLOR_HTTP]> chips: POST /eFilingXml/postFormXml
+
+filing_resource_handler -[$COLOR_KAFKA]> filing_notification_sender: filing-received
+filing_notification_sender -[$COLOR_KAFKA]> notification_sender: message-send
+notification_sender -[$COLOR_KAFKA]> email_sender: email-send
+
+@enduml
