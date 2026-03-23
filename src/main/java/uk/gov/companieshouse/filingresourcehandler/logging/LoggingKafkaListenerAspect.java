@@ -26,7 +26,7 @@ import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 
 @Component
 @Aspect
-class LoggingKafkaListenerAspect {
+public class LoggingKafkaListenerAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
     private static final String LOG_MESSAGE_RECEIVED = "Processed tx-closed message";
@@ -34,7 +34,7 @@ class LoggingKafkaListenerAspect {
     private static final String EXCEPTION_MESSAGE = "%s exception thrown";
     private final int maxAttempts;
 
-    LoggingKafkaListenerAspect(@Value("${maximum.retry.attempts}") int maxAttempts) {
+    LoggingKafkaListenerAspect(@Value("${kafka.maximum.retry.attempts}") int maxAttempts) {
         this.maxAttempts = maxAttempts;
     }
 
@@ -44,18 +44,25 @@ class LoggingKafkaListenerAspect {
         try {
             Message<?> message = (Message<?>) joinPoint.getArgs()[0];
             MessageHeaders headers = message.getHeaders();
-            if (headers.get(DEFAULT_HEADER_ATTEMPTS) != null) {
-                retryCount = Optional.of(headers.get(DEFAULT_HEADER_ATTEMPTS))
-                        .map(attempts -> ByteBuffer.wrap((byte[]) attempts).getInt())
-                        .orElse(1) - 1;
-            }
-            DataMapHolder.initialise(
-                    String.valueOf(Optional.ofNullable(extractTransactionId(message.getPayload()))));
+
+            String topic = (String) headers.get(RECEIVED_TOPIC);
+            Integer partition = (Integer) headers.get(RECEIVED_PARTITION);
+            Long offset = (Long) headers.get(OFFSET);
+
+            DataMapHolder.initialise("%s-%d-%d".formatted(topic, partition, offset));
+
+            retryCount = Optional.ofNullable(headers.get(DEFAULT_HEADER_ATTEMPTS))
+                    .map(attempts -> ByteBuffer.wrap((byte[]) attempts).getInt())
+                    .orElse(1) - 1;
+
             DataMapHolder.get()
                     .retryCount(retryCount)
-                    .topic((String) headers.get(RECEIVED_TOPIC))
-                    .partition((Integer) headers.get(RECEIVED_PARTITION))
-                    .offset((Long) headers.get(OFFSET));
+                    .topic(topic)
+                    .partition(partition)
+                    .offset(offset);
+
+            // Add to log map last to ensure other headers are logged in the event of invalid payload
+            DataMapHolder.get().transactionId(extractTransactionId(message.getPayload()));
 
             LOGGER.info(LOG_MESSAGE_RECEIVED, DataMapHolder.getLogMap());
 

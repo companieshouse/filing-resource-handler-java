@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProducerTest {
-    public static final String TEST_TOPIC = "test-topic";
+    protected static final String PRODUCER_MAIN_TOPIC = "filing-received";
     @Mock
     private KafkaTemplate<String, FilingReceived> kafkaTemplate;
     @Mock
@@ -33,20 +33,20 @@ class ProducerTest {
     private Producer producer;
     @BeforeEach
     void setUp() {
-        producer = new Producer(kafkaTemplate, TEST_TOPIC, messageFlags);
+        producer = new Producer(kafkaTemplate, PRODUCER_MAIN_TOPIC, messageFlags);
     }
 
     @Test
     void publishMessageShouldSendSuccessfully() {
         // Arrange
         CompletableFuture<SendResult<String, FilingReceived>> future = CompletableFuture.completedFuture(null);
-        when(kafkaTemplate.send(TEST_TOPIC, filingReceived)).thenReturn(future);
+        when(kafkaTemplate.send(PRODUCER_MAIN_TOPIC, filingReceived)).thenReturn(future);
 
         // Act
         producer.publishMessage(filingReceived);
 
         // Assert
-        verify(kafkaTemplate).send(TEST_TOPIC, filingReceived);
+        verify(kafkaTemplate).send(PRODUCER_MAIN_TOPIC, filingReceived);
         verifyNoInteractions(messageFlags);
     }
 
@@ -54,7 +54,7 @@ class ProducerTest {
     void publishMessageShouldHandleCompletionException() {
         // Arrange
         doThrow(new CompletionException("Test exception", new RuntimeException()))
-                .when(kafkaTemplate).send(TEST_TOPIC, filingReceived);
+                .when(kafkaTemplate).send(PRODUCER_MAIN_TOPIC, filingReceived);
 
         // Act & Assert
         assertThatThrownBy(() -> producer.publishMessage(filingReceived))
@@ -68,7 +68,7 @@ class ProducerTest {
     void publishMessageShouldHandleKafkaException() {
         // Arrange
         doThrow(new KafkaException("Test Kafka exception"))
-                .when(kafkaTemplate).send(TEST_TOPIC, filingReceived);
+                .when(kafkaTemplate).send(PRODUCER_MAIN_TOPIC, filingReceived);
 
         // Act & Assert
         assertThatThrownBy(() -> producer.publishMessage(filingReceived))

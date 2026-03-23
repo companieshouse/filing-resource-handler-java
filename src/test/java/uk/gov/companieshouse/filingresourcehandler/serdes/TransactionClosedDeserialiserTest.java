@@ -18,13 +18,13 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionClosed;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionClosedMessage;
 
 class TransactionClosedDeserialiserTest {
 
     @Test
     void testShouldSuccessfullyDeserializeMessageReceived() throws IOException {
-        transaction_closed messageSend = getTransactionClosed();
+        transaction_closed messageSend = getTransactionClosedMessage();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Encoder encoder = EncoderFactory.get().directBinaryEncoder(outputStream, null);
         DatumWriter<transaction_closed> writer = new ReflectDatumWriter<>(transaction_closed.class);

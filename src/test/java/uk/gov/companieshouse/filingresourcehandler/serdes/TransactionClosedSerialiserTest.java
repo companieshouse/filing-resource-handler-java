@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionClosed;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionClosedMessage;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionClosedSerialiserTest {
@@ -31,7 +31,7 @@ class TransactionClosedSerialiserTest {
     @Test
     void serializeShouldReturnNonNullByteArray() {
         // Arrange
-        transaction_closed transactionClosed = getTransactionClosed();
+        transaction_closed transactionClosed = getTransactionClosedMessage();
 
         // Act
         try (TransactionClosedSerialiser serialiser = new TransactionClosedSerialiser()) {
@@ -46,7 +46,7 @@ class TransactionClosedSerialiserTest {
     @Test
     void serializeShouldThrowNonRetryableExceptionForInvalidData() throws IOException {
         // Arrange
-        transaction_closed transactionClosed = getTransactionClosed();
+        transaction_closed transactionClosed = getTransactionClosedMessage();
         TransactionClosedSerialiser serialiser = spy(new TransactionClosedSerialiser());
         when(serialiser.getDatumWriter()).thenReturn(writer);
         doThrow(IOException.class).when(writer).write(any(), any());
