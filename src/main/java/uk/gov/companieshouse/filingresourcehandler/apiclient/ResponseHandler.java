@@ -35,7 +35,7 @@ public class ResponseHandler {
             throw new NonRetryableException(errorMsg, ex);
         } else {
             String infoMsg = API_INFO_STACK_TRACE_MESSAGE.formatted(statusCode, Arrays.toString(ex.getStackTrace()));
-            LOGGER.info(infoMsg, DataMapHolder.getLogMap());
+            LOGGER.error(infoMsg, DataMapHolder.getLogMap());
             throw new RetryableException(errorMsg, ex);
         }
     }

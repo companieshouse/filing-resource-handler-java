@@ -22,9 +22,9 @@ class SubmissionIdServiceTest {
         Map<String, String> matcher = new HashMap<>();
         int offset = service.findSubmissionIDOffset(transaction, matcher);
         assertThat(offset).isEqualTo(1);
-        // Check matcher is populated with expected key
-        assertThat(matcher).containsKey("limited-partnership-post-transition#update-partnership-redesignate-to-pflp:/transactions/987654/limited-partnership/partnership/87qwerty");
-        assertThat(matcher.values()).contains("987654-1");
+        assertThat(matcher)
+                .containsKey("limited-partnership-post-transition#update-partnership-redesignate-to-pflp:/transactions/987654/limited-partnership/partnership/87qwerty")
+                .containsValue("987654-1");
     }
 
     @Test

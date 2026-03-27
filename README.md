@@ -29,16 +29,9 @@ These instructions are for a local docker environment.
 2. Run `./bin/chs-dev services enable filing-resource-handler-java`
 3. Run `./bin/chs-dev development enable filing-resource-handler-java` if you wish to see changes in the code
 
-## Configuration
-
-| Variable | Description | Example (from docker-chs-development) |
-|----------|-------------|---------------------------------------|
-
-# Error Handling
-
 ## Design
 
-[design](./docs/design/readme.md)
+[design](docs/design/DESIGN.md)
 
 ## Testing
 

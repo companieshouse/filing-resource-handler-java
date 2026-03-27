@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.filingresourcehandler.factory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import uk.gov.companieshouse.filing.received.PresenterRecord;
 import uk.gov.companieshouse.filing.received.SubmissionRecord;
 import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +30,10 @@ public class FilingReceivedFactory {
         String companyName = transaction.getCompanyName();
         String companyNumber = transaction.getCompanyNumber();
         if (companyName.isEmpty() || companyNumber.isBlank()) {
-            Map<String, Object> tempFiling = null;
+            Map<String, Object> tempFiling = new HashMap<>();
             try {
-                tempFiling = objectMapper.readValue(items.getFirst().getData(), Map.class);
+                tempFiling = objectMapper.readValue(items.getFirst().getData(), new TypeReference<>() {
+                });
             } catch (Exception err) {
                 String errorMessage = "Unable to parse json for transaction id %s".formatted(transaction.getId());
                 RetryErrorHandler.logAndThrowRetryableException(errorMessage);

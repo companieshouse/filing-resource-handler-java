@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class FilingProcessingResult {
     private final Map<String, Filing> filingsToPatch;
-    private final List<uk.gov.companieshouse.filing.received.Transaction> items;
+    private final List<Transaction> items;
 
     public FilingProcessingResult(Map<String, Filing> filingsToPatch, List<Transaction> items) {
         this.filingsToPatch = filingsToPatch;
@@ -19,7 +19,7 @@ public class FilingProcessingResult {
         return filingsToPatch;
     }
 
-    public List<uk.gov.companieshouse.filing.received.Transaction> getItems() {
+    public List<Transaction> getItems() {
         return items;
     }
 }

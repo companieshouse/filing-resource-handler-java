@@ -37,15 +37,16 @@ public class FilingClient {
         try {
             MultiValueMap<String, String> queryParams = getQueryParams(link, companyName, companyNumber);
             response = webClient.get()
-                    .uri(uriBuilder -> uriBuilder.path(requestUri).queryParams(queryParams).build()).
-                    headers(headers -> {
+                    .uri(uriBuilder -> uriBuilder.path(requestUri).queryParams(queryParams).build())
+                    .headers(headers -> {
                         if (requestId != null && !requestId.trim().isEmpty()) {
                             headers.add("X-Request-Id", requestId);
                         }
-                    }).retrieve().
-                    bodyToMono(new ParameterizedTypeReference<FilingApi[]>() {
-                               }
-                    ).block();
+                    })
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<FilingApi[]>() {
+                    })
+                    .block();
             if (response == null) {
                 String errorMessage = "Failed to execute GET getFilingApi with requestUri: %s with null Response".formatted(requestUri);
                 RetryErrorHandler.logAndThrowRetryableException(errorMessage);

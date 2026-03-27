@@ -28,14 +28,18 @@ public class SubmissionIdService {
                 String errorMessage = "Invalid offset in submissionID: %s on transactionId %s and error message %s".formatted(submissionID, transaction.getId(), ex.getMessage());
                 RetryErrorHandler.logAndThrowRetryableException(errorMessage);
             }
-            Filing filing = transaction.getFilings().get(submissionID);
-            String filingType = filing.getType();
-            String url = filing.getLinks().get("resource");
-            transactionMatcher.put(format("%s:%s", filingType, url), submissionID);
+            updateTransactionMatcher(transaction, transactionMatcher, submissionID);
             if (offset > largestOffset) {
                 largestOffset = offset;
             }
         }
         return largestOffset;
+    }
+
+    private void updateTransactionMatcher(Transaction transaction, Map<String, String> transactionMatcher, String submissionID) {
+        Filing filing = transaction.getFilings().get(submissionID);
+        String filingType = filing.getType();
+        String url = filing.getLinks().get("resource");
+        transactionMatcher.put(format("%s:%s", filingType, url), submissionID);
     }
 }

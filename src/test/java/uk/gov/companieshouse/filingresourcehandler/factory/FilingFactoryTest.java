@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.filingresourcehandler.factory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Filing;
@@ -13,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FilingFactoryTest {
 
     @Test
-    void testGetFilingCreatesCorrectFiling() throws JsonProcessingException {
+    void testGetFilingCreatesCorrectFiling() {
         FilingFactory factory = TestUtils.getFilingFactory();
         FilingApi filingApi = TestUtils.getFilingApi();
         String companyNumber = "12345678";

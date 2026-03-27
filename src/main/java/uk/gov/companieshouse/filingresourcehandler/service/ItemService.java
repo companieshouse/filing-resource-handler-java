@@ -29,7 +29,7 @@ public class ItemService {
             String errorMessage = "Unable to write filingDataJson for submissionId :%s".formatted(submissionId);
             RetryErrorHandler.logAndThrowRetryableException(errorMessage);
         }
-        uk.gov.companieshouse.filing.received.Transaction item = itemFactory.getItem(filing, submissionId, filingDataJson);
+        Transaction item = itemFactory.getItem(filing, submissionId, filingDataJson);
         items.add(item);
     }
 }

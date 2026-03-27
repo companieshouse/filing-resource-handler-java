@@ -6,7 +6,6 @@ import uk.gov.companieshouse.api.model.transaction.Filing;
 import uk.gov.companieshouse.api.model.transaction.Resource;
 import uk.gov.companieshouse.api.model.transaction.Transaction;
 import uk.gov.companieshouse.filing.received.FilingReceived;
-import uk.gov.companieshouse.filingresourcehandler.apiclient.FilingClient;
 import uk.gov.companieshouse.filingresourcehandler.apiclient.TransactionsApiClient;
 import uk.gov.companieshouse.filingresourcehandler.exception.RetryableException;
 import uk.gov.companieshouse.filingresourcehandler.factory.FilingReceivedFactory;
@@ -33,7 +32,7 @@ public class FilingResourceHandlerService {
     private final FilingReceivedFactory filingReceivedFactory;
     private final Producer producer;
 
-    public FilingResourceHandlerService(TransactionsApiClient transactionsApiClient, FilingClient filingClient,
+    public FilingResourceHandlerService(TransactionsApiClient transactionsApiClient,
                                         FilingResourceProcessorService filingResourceProcessorService,
                                         ResourceMapFactory resourceMapFactory, FilingReceivedFactory filingReceivedFactory, Producer producer) {
         this.transactionsApiClient = transactionsApiClient;

@@ -12,6 +12,9 @@ import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 public class RetryErrorHandler {
     private static final Logger logger = LoggerFactory.getLogger(NAMESPACE);
 
+    private RetryErrorHandler() {
+    }
+
     public static void logAndThrowRetryableException(String message) {
         logger.error(message, DataMapHolder.getLogMap());
         throw new RetryableException(message);

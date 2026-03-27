@@ -40,7 +40,7 @@ public class FilingResourceProcessorService {
         Map<String, Filing> transactionsFilingMap = new HashMap<>();
         List<uk.gov.companieshouse.filing.received.Transaction> items = new ArrayList<>();
         Map<String, String> transactionMatcher = new HashMap<>();
-        int offset = submissionIdService.findSubmissionIDOffset(transaction, transactionMatcher); // Move logic here
+        int offset = submissionIdService.findSubmissionIDOffset(transaction, transactionMatcher);
         String companyNumber = transaction.getCompanyNumber();
         for (Resource resource : resources.values()) {
             String link = resource.getLinks().get("resource");

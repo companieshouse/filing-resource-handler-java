@@ -20,13 +20,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.kafka.ConfluentKafkaContainer;
-import uk.gov.companieshouse.filing.received.FilingReceived;
 import uk.gov.companieshouse.filingresourcehandler.serdes.TransactionClosedDeserialiser;
 
 import java.io.ByteArrayOutputStream;
@@ -50,8 +47,6 @@ abstract class AbstractKafkaIT {
     protected KafkaProducer<String, byte[]> testProducer = testProducer(kafka.getBootstrapServers());
     @Autowired
     protected TestConsumerAspect testConsumerAspect;
-    @Autowired
-    protected KafkaTemplate<String, FilingReceived> kafkaTemplate;
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry registry) {
@@ -64,9 +59,7 @@ abstract class AbstractKafkaIT {
     }
 
     @BeforeEach
-    protected void setup(@Autowired KafkaListenerEndpointRegistry registry) {
-//        registry.getAllListenerContainers() // Ensure all listener containers are assigned to partitions before tests run
-//                .forEach(container -> ContainerTestUtils.waitForAssignment(container, 1));
+    protected void setup() {
         testConsumerAspect.resetLatch();
         testConsumer.subscribe(getSubscribedTopics());
         testConsumer.poll(Duration.ofMillis(1000));

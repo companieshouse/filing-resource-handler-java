@@ -14,6 +14,8 @@ import uk.gov.companieshouse.filingresourcehandler.exception.NonRetryableExcepti
 import uk.gov.companieshouse.filingresourcehandler.exception.RetryableException;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
@@ -34,7 +36,8 @@ class ResponseHandlerTest {
     @Test
     void handleApiErrorResponseExceptionThrowsNonRetryableForConflict() {
         when(apiErrorResponseException.getStatusCode()).thenReturn(HttpStatus.CONFLICT.value());
-        assertThatThrownBy(() -> handler.handle(apiErrorResponseException))
+        Throwable thrown = catchThrowable(() -> handler.handle(apiErrorResponseException));
+        assertThat(thrown)
                 .isInstanceOf(NonRetryableException.class)
                 .hasMessageContaining("PATCH call to API failed, status code");
     }
@@ -87,7 +90,8 @@ class ResponseHandlerTest {
     void handleIntStatusCodeDelegatesToApiErrorResponseException() {
         ResponseHandler spyHandler = spy(handler);
         doThrow(new NonRetryableException("fail")).when(spyHandler).handle(any(ApiErrorResponseException.class));
-        assertThatThrownBy(() -> spyHandler.handle(HttpStatus.CONFLICT.value()))
+        int statusCode = HttpStatus.CONFLICT.value();
+        assertThatThrownBy(() -> spyHandler.handle(statusCode))
                 .isInstanceOf(NonRetryableException.class);
     }
 }

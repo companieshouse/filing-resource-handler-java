@@ -4,12 +4,12 @@ import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Filing;
 
-import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class FilingFactory {
 
-    public Filing getFiling(FilingApi filing, String companyNumber, HashMap<String, String> links) {
+    public Filing getFiling(FilingApi filing, String companyNumber, Map<String, String> links) {
         Filing patchFiling = new Filing();
         patchFiling.setCompanyNumber(companyNumber);
         patchFiling.setDescription(filing.getDescription());

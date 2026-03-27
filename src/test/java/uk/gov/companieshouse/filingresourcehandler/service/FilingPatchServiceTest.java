@@ -1,10 +1,12 @@
 package uk.gov.companieshouse.filingresourcehandler.service;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.api.model.transaction.Filing;
 import uk.gov.companieshouse.filingresourcehandler.factory.FilingFactory;
 
 import java.util.HashMap;
@@ -25,7 +27,12 @@ class FilingPatchServiceTest {
     @Test
     void addFilingToPatchSuccessfully() {
         when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
-        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi()
-                , "1234", "/transaction", "5678");
+        HashMap<String, Filing> map = new HashMap<>();
+        filingPatchService.addFilingToPatch(map, getFilingApi(), "1234", "/transaction", "5678");
+        // Assert that the map contains the expected key and value
+        Assertions.assertTrue(map.containsKey("1234"));
+        Filing filing = map.get("1234");
+        Assertions.assertNotNull(filing);
+        Assertions.assertEquals(getFiling().getType(), filing.getType());
     }
 }

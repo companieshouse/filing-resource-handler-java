@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.filingresourcehandler.apiclient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,7 +53,7 @@ class TransactionsApiClientTest {
     }
 
     @Test
-    void getTransactionReturnsTransactionOnSuccess() throws ApiErrorResponseException, URIValidationException, JsonProcessingException {
+    void getTransactionReturnsTransactionOnSuccess() throws ApiErrorResponseException, URIValidationException {
         ApiResponse<Transaction> apiResponse = new ApiResponse<>(HttpStatus.OK.value(), null, getTransaction());
         when(privateTransactionResourceHandler.get(any())).thenReturn(privateTransactionGet);
         when(privateTransactionGet.execute()).thenReturn(apiResponse);

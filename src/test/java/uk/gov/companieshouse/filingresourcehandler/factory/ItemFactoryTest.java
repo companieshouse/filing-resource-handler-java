@@ -2,6 +2,7 @@ package uk.gov.companieshouse.filingresourcehandler.factory;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
+import uk.gov.companieshouse.filing.received.Transaction;
 import uk.gov.companieshouse.filingresourcehandler.utils.TestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +16,7 @@ class ItemFactoryTest {
         String submissionId = "sub123";
         String filingDataJson = "{\"key\":\"value\"}";
 
-        uk.gov.companieshouse.filing.received.Transaction item = factory.getItem(filingApi, submissionId, filingDataJson);
+        Transaction item = factory.getItem(filingApi, submissionId, filingDataJson);
 
         assertThat(item.getData()).isEqualTo(filingDataJson);
         assertThat(item.getKind()).isEqualTo("test-kind");

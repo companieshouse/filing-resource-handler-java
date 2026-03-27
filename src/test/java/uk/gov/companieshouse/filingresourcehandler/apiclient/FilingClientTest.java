@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,9 +45,6 @@ class FilingClientTest {
     @Test
     void getFilingApiReturnsFilingApiArrayOnSuccess() {
         FilingApi[] expected = new FilingApi[]{new FilingApi()};
-        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
-        Mono<FilingApi[]> monoFilingApiArray = mock(Mono.class);
-
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(any(java.util.function.Function.class))).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
