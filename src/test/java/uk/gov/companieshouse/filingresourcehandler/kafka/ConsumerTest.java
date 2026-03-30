@@ -11,7 +11,7 @@ import uk.gov.companieshouse.filingresourcehandler.exception.RetryableException;
 import uk.gov.companieshouse.filingresourcehandler.service.FilingResourceHandlerService;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -26,9 +26,10 @@ class ConsumerTest {
     @Mock
     private transaction_closed transactionClosed;
     @Mock
-    Message<transaction_closed> message;
+    private Message<transaction_closed> message;
     @InjectMocks
     private Consumer consumer;
+
     @Test
     void consumeShouldProcessMessage() {
 

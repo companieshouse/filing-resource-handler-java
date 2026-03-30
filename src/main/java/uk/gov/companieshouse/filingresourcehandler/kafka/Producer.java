@@ -24,7 +24,7 @@ public class Producer {
     private final MessageFlags messageFlags;
 
     public Producer(KafkaTemplate<String, FilingReceived> kafkaTemplate,
-                    @Value("${message.send.topic}") String filingReceivedTopic, MessageFlags messageFlags) {
+                    @Value("${kafka.message.send.topic}") String filingReceivedTopic, MessageFlags messageFlags) {
         this.kafkaTemplate = kafkaTemplate;
         this.filingReceivedTopic = filingReceivedTopic;
         this.messageFlags = messageFlags;

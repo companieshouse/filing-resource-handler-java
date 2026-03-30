@@ -25,6 +25,7 @@ import org.springframework.kafka.support.serializer.DelegatingByTypeSerializer;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import uk.gov.companieshouse.filing.received.FilingReceived;
 import uk.gov.companieshouse.filingresourcehandler.exception.RetryableException;
+import uk.gov.companieshouse.filingresourcehandler.serdes.FilingReceivedSerialiser;
 import uk.gov.companieshouse.filingresourcehandler.serdes.TransactionClosedDeserialiser;
 import uk.gov.companieshouse.filingresourcehandler.serdes.TransactionClosedSerialiser;
 
@@ -36,7 +37,7 @@ import java.util.Map;
 public class KafkaConfig {
 
 
-    @Value("${spring.kafka.bootstrap-servers}")
+    @Value("${kafka.bootstrap-servers}")
     private String kafkaBrokers;
 
 
@@ -57,17 +58,19 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, transaction_closed> messageSendKafkaListenerContainerFactory(ConsumerFactory<String, transaction_closed> consumerFactory) {
+    public ConcurrentKafkaListenerContainerFactory<String, transaction_closed> messageSendKafkaListenerContainerFactory(ConsumerFactory<String, transaction_closed> consumerFactory
+            , @Value("${kafka.consumer.concurrency}") Integer concurrency) {
         ConcurrentKafkaListenerContainerFactory<String, transaction_closed> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.setConcurrency(concurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
         return factory;
     }
 
 
     @Bean
-    public ProducerFactory<String, Object> messageSendProducerFactory(MessageFlags messageFlags, @Value("${message.receive.topic}") String topic,
-                                                                      @Value("${message.group.name}") String groupId) {
+    public ProducerFactory<String, Object> messageSendProducerFactory(MessageFlags messageFlags, @Value("${kafka.message.receive.topic}") String topic,
+                                                                      @Value("${kafka.message.group.name}") String groupId) {
         return new DefaultKafkaProducerFactory<>(
                 Map.of(
                         ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokers,
@@ -91,13 +94,14 @@ public class KafkaConfig {
 
     @Bean
     public ProducerFactory<String, FilingReceived> filingReceivedProducerFactory(
-            @Value("${spring.kafka.bootstrap-servers}") String bootstrapAddress) {
+            @Value("${kafka.bootstrap-servers}") String bootstrapAddress) {
         return new DefaultKafkaProducerFactory<>(
                 Map.of(
                         ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress,
                         ProducerConfig.ACKS_CONFIG, "all",
                         ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class,
-                        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, FilingReceived.class));
+                        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, FilingReceivedSerialiser.class),
+                new StringSerializer(), new FilingReceivedSerialiser());
     }
 
     @Bean
@@ -107,9 +111,9 @@ public class KafkaConfig {
 
     @Bean
     public RetryTopicConfiguration retryTopicConfiguration(KafkaTemplate<String, Object> template,
-                                                           @Value("${message.group.name}") String groupId,
-                                                           @Value("${maximum.retry.attempts}") int attempts,
-                                                           @Value("${retry.throttle.rate.milliseconds}") int delay) {
+                                                           @Value("${kafka.message.group.name}") String groupId,
+                                                           @Value("${kafka.maximum.retry.attempts}") int attempts,
+                                                           @Value("${kafka.retry.throttle.rate.milliseconds}") int delay) {
         return RetryTopicConfigurationBuilder
                 .newInstance()
                 .doNotAutoCreateRetryTopics() // this is necessary to prevent failing connection during loading of spring app context

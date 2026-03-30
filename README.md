@@ -24,16 +24,14 @@ To checkout and build the service:
 
 These instructions are for a local docker environment.
 
-## Configuration
-
-| Variable | Description | Example (from docker-chs-development) |
-|----------|-------------|---------------------------------------|
-
-# Error Handling
+2. Edit `services/modules/filing-resource-handler/filing-resource-handler-java.docker-compose.yaml`
+   a. Add the value for `CHS_INTERNAL_API_KEY` which can be found in MongoDB
+2. Run `./bin/chs-dev services enable filing-resource-handler-java`
+3. Run `./bin/chs-dev development enable filing-resource-handler-java` if you wish to see changes in the code
 
 ## Design
 
-[design](./docs/design/readme.md)
+[design](docs/design/DESIGN.md)
 
 ## Testing
 

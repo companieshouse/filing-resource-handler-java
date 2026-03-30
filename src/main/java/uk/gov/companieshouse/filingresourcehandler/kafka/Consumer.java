@@ -18,10 +18,10 @@ public class Consumer {
     }
 
     @KafkaListener(
-            id = "${message.group.name}",
+            id = "${kafka.message.group.name}",
             containerFactory = "messageSendKafkaListenerContainerFactory",
-            topics = "${message.receive.topic}",
-            groupId = "${message.group.name}"
+            topics = "${kafka.message.receive.topic}",
+            groupId = "${kafka.message.group.name}"
     )
     public void consume(Message<transaction_closed> message) {
         try {
