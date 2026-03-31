@@ -21,8 +21,8 @@ import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 public class ResponseHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
-    private static final String API_INFO_STACK_TRACE_MESSAGE = "PATCH call to API failed, status code: %d. %s";
-    private static final String API_ERROR_MESSAGE = "PATCH call to API failed, status code: %d";
+    private static final String API_INFO_MESSAGE = "GET call to API failed, status code: %d. %s";
+    private static final String API_ERROR_MESSAGE = "GET call to API failed, status code: %d";
     private static final String URI_VALIDATION_EXCEPTION_MESSAGE = "Invalid URI";
 
     public void handle(ApiErrorResponseException ex) {
@@ -34,8 +34,8 @@ public class ResponseHandler {
             LOGGER.error(errorMsg, ex, DataMapHolder.getLogMap());
             throw new NonRetryableException(errorMsg, ex);
         } else {
-            String infoMsg = API_INFO_STACK_TRACE_MESSAGE.formatted(statusCode, Arrays.toString(ex.getStackTrace()));
-            LOGGER.error(infoMsg, DataMapHolder.getLogMap());
+            errorMsg = API_INFO_MESSAGE.formatted(statusCode, Arrays.toString(ex.getStackTrace()));
+            LOGGER.error(errorMsg, ex, DataMapHolder.getLogMap());
             throw new RetryableException(errorMsg, ex);
         }
     }

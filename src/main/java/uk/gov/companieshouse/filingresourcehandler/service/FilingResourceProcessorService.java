@@ -36,7 +36,6 @@ public class FilingResourceProcessorService {
     }
 
     public FilingProcessingResult processResources(Transaction transaction, Map<String, Resource> resources) {
-        Map<String, Filing> filingsToPatch = new HashMap<>();
         Map<String, Filing> transactionsFilingMap = new HashMap<>();
         List<uk.gov.companieshouse.filing.received.Transaction> items = new ArrayList<>();
         Map<String, String> transactionMatcher = new HashMap<>();
@@ -62,7 +61,7 @@ public class FilingResourceProcessorService {
             }
         }
 
-        return new FilingProcessingResult(filingsToPatch, items);
+        return new FilingProcessingResult(transactionsFilingMap, items);
     }
     
 }
