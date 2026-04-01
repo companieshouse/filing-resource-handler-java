@@ -61,7 +61,8 @@ public class FilingResourceHandlerService {
         Map<String, Filing> filingsToPatch = filingProcessingResult.getFilingsToPatch();
         if (!filingsToPatch.isEmpty()) {
             Transaction transactionPatch = new Transaction();
-            transaction.setFilings(filingsToPatch);
+            transactionPatch.setFilings(filingsToPatch);
+            transactionPatch.setResources(Map.of());
             transactionsApiClient.patchTransaction(transactionUrl, transactionPatch);
         }
         if (items.isEmpty()) {

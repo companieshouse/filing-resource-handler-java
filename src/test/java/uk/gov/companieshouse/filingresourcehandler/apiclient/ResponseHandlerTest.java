@@ -39,7 +39,7 @@ class ResponseHandlerTest {
         Throwable thrown = catchThrowable(() -> handler.handle(apiErrorResponseException));
         assertThat(thrown)
                 .isInstanceOf(NonRetryableException.class)
-                .hasMessageContaining("PATCH call to API failed, status code");
+                .hasMessageContaining("GET call to API failed, status code");
     }
 
     @Test
@@ -47,7 +47,7 @@ class ResponseHandlerTest {
         when(apiErrorResponseException.getStatusCode()).thenReturn(HttpStatus.BAD_REQUEST.value());
         assertThatThrownBy(() -> handler.handle(apiErrorResponseException))
                 .isInstanceOf(NonRetryableException.class)
-                .hasMessageContaining("PATCH call to API failed, status code");
+                .hasMessageContaining("GET call to API failed, status code");
     }
 
     @Test
@@ -55,7 +55,7 @@ class ResponseHandlerTest {
         when(apiErrorResponseException.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.value());
         assertThatThrownBy(() -> handler.handle(apiErrorResponseException))
                 .isInstanceOf(RetryableException.class)
-                .hasMessageContaining("PATCH call to API failed, status code");
+                .hasMessageContaining("GET call to API failed, status code");
     }
 
     @Test

@@ -61,7 +61,7 @@ public class TransactionsApiClient {
         client.getHttpClient().setRequestId(DataMapHolder.getRequestId());
         patchRequestUri = TRANSACTION_URI.formatted(patchRequestUri);
         DataMapHolder.get().uri(patchRequestUri);
-        LOGGER.info("Calling PATCH transaction for patchRequestUri %s".formatted(patchRequestUri), DataMapHolder.getLogMap());
+        LOGGER.info("Calling PATCH transaction for patchBody %s".formatted(transaction), DataMapHolder.getLogMap());
 
         try {
             ApiResponse<Void> response = client.privateTransaction()
