@@ -20,9 +20,12 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.GET_API_CALL;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.PATCH_API_CALL;
 
 @ExtendWith(MockitoExtension.class)
 class ResponseHandlerTest {
+
 
     @Mock
     WebClientResponseException webClientResponseException;
@@ -36,32 +39,32 @@ class ResponseHandlerTest {
     @Test
     void handleApiErrorResponseExceptionThrowsNonRetryableForConflict() {
         when(apiErrorResponseException.getStatusCode()).thenReturn(HttpStatus.CONFLICT.value());
-        Throwable thrown = catchThrowable(() -> handler.handle(apiErrorResponseException));
+        Throwable thrown = catchThrowable(() -> handler.handle(GET_API_CALL, apiErrorResponseException));
         assertThat(thrown)
                 .isInstanceOf(NonRetryableException.class)
-                .hasMessageContaining("GET call to API failed, status code");
+                .hasMessageContaining("GET call to transaction API failed, status code");
     }
 
     @Test
     void handleApiErrorResponseExceptionThrowsNonRetryableForBadRequest() {
         when(apiErrorResponseException.getStatusCode()).thenReturn(HttpStatus.BAD_REQUEST.value());
-        assertThatThrownBy(() -> handler.handle(apiErrorResponseException))
+        assertThatThrownBy(() -> handler.handle(GET_API_CALL, apiErrorResponseException))
                 .isInstanceOf(NonRetryableException.class)
-                .hasMessageContaining("GET call to API failed, status code");
+                .hasMessageContaining("GET call to transaction API failed, status code");
     }
 
     @Test
     void handleApiErrorResponseExceptionThrowsRetryableForOtherStatus() {
         when(apiErrorResponseException.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        assertThatThrownBy(() -> handler.handle(apiErrorResponseException))
+        assertThatThrownBy(() -> handler.handle(PATCH_API_CALL, apiErrorResponseException))
                 .isInstanceOf(RetryableException.class)
-                .hasMessageContaining("GET call to API failed, status code");
+                .hasMessageContaining("Patch call to transaction API failed, status code");
     }
 
     @Test
     void handleURIValidationExceptionThrowsNonRetryable() {
         URIValidationException ex = new URIValidationException("bad uri");
-        assertThatThrownBy(() -> handler.handle(ex))
+        assertThatThrownBy(() -> handler.handle(GET_API_CALL, ex))
                 .isInstanceOf(NonRetryableException.class)
                 .hasMessageContaining("Invalid URI");
     }
@@ -89,9 +92,9 @@ class ResponseHandlerTest {
     @Test
     void handleIntStatusCodeDelegatesToApiErrorResponseException() {
         ResponseHandler spyHandler = spy(handler);
-        doThrow(new NonRetryableException("fail")).when(spyHandler).handle(any(ApiErrorResponseException.class));
+        doThrow(new NonRetryableException("fail")).when(spyHandler).handle(any(), any(ApiErrorResponseException.class));
         int statusCode = HttpStatus.CONFLICT.value();
-        assertThatThrownBy(() -> spyHandler.handle(statusCode))
+        assertThatThrownBy(() -> spyHandler.handle(GET_API_CALL, statusCode))
                 .isInstanceOf(NonRetryableException.class);
     }
 }

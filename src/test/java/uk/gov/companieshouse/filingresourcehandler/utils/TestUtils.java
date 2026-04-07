@@ -45,6 +45,8 @@ public class TestUtils {
     private static final String TEST_COSTS_PATH = "/transactions/987654/limited-partnership/partnership/87qwerty/costs";
     private static final String TEST_VALIDATION_STATUS_PATH = "/transactions/987654/limited-partnership/partnership/87qwerty/validation-status";
     private static final String TEST_FILINGS_KEY = "987654-1";
+    public static final String GET_API_CALL = "GET call to transaction";
+    public static final String PATCH_API_CALL = "Patch call to transaction";
 
     @NotNull
     public static FilingReceived getFilingReceived() {
