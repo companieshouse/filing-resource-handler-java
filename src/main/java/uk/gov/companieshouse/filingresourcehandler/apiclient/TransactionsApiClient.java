@@ -25,6 +25,8 @@ public class TransactionsApiClient {
     private static final String TRANSACTION_URI = "/private/%s";
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
     private static final List<QueryParam> FORCE_QUERY_PARAM = List.of(new QueryParam("force", "true"));
+    private static final String GET_API_CALL = "GET call to transaction";
+    private static final String PATCH_API_CALL = "Patch call to transaction";
 
     private final Supplier<InternalApiClient> internalApiClientFactory;
     private final ResponseHandler responseHandler;
@@ -43,15 +45,15 @@ public class TransactionsApiClient {
             response = internalApiClient.privateTransaction().get(requestUri).execute();
             if (response.getStatusCode() != HttpStatus.OK.value()) {
                 LOGGER.error("Failed to execute get transactions transactionId: %s with status code: %d".formatted(requestUri, response.getStatusCode()), DataMapHolder.getLogMap());
-                responseHandler.handle(response.getStatusCode());
+                responseHandler.handle(GET_API_CALL, response.getStatusCode());
             } else {
                 LOGGER.info("Successfully executed get transactions", DataMapHolder.getLogMap());
             }
             return Optional.ofNullable(response.getData());
         } catch (ApiErrorResponseException ex) {
-            responseHandler.handle(ex);
+            responseHandler.handle(GET_API_CALL, ex);
         } catch (URIValidationException ex) {
-            responseHandler.handle(ex);
+            responseHandler.handle(GET_API_CALL, ex);
         }
         return Optional.empty();
     }
@@ -71,12 +73,12 @@ public class TransactionsApiClient {
             if (response.getStatusCode() == HttpStatus.NO_CONTENT.value()) {
                 LOGGER.info("PATCH transaction succeeded", DataMapHolder.getLogMap());
             } else {
-                responseHandler.handle(response.getStatusCode());
+                responseHandler.handle(PATCH_API_CALL, response.getStatusCode());
             }
         } catch (ApiErrorResponseException ex) {
-            responseHandler.handle(ex);
+            responseHandler.handle(PATCH_API_CALL, ex);
         } catch (URIValidationException ex) {
-            responseHandler.handle(ex);
+            responseHandler.handle(PATCH_API_CALL, ex);
         }
     }
 

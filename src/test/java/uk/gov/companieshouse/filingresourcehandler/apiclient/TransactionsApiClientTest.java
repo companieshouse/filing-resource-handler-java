@@ -20,9 +20,12 @@ import uk.gov.companieshouse.api.model.transaction.Transaction;
 import java.util.function.Supplier;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.GET_API_CALL;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.PATCH_API_CALL;
 import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransaction;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,7 +81,7 @@ class TransactionsApiClientTest {
         var result = transactionsApiClient.getTransaction("txn-id");
         verify(privateTransactionResourceHandler).get(any());
         verify(privateTransactionGet).execute();
-        verify(responseHandler).handle(400);
+        verify(responseHandler).handle(GET_API_CALL, 400);
         assert (result.isEmpty());
     }
 
@@ -91,7 +94,7 @@ class TransactionsApiClientTest {
         transactionsApiClient.getTransaction("txn-id");
         verify(privateTransactionResourceHandler).get(any());
         verify(privateTransactionGet).execute();
-        verify(responseHandler).handle(any(ApiErrorResponseException.class));
+        verify(responseHandler).handle(anyString(), any(ApiErrorResponseException.class));
     }
 
     @Test
@@ -103,11 +106,11 @@ class TransactionsApiClientTest {
         transactionsApiClient.getTransaction("txn-id");
         verify(privateTransactionResourceHandler).get(any());
         verify(privateTransactionGet).execute();
-        verify(responseHandler).handle(any(URIValidationException.class));
+        verify(responseHandler).handle(anyString(), any(URIValidationException.class));
     }
 
     @Test
-    void patchTransactionHandlesSuccessAndError() throws ApiErrorResponseException, URIValidationException {
+    void patchTransactionHandlesSuccess() throws ApiErrorResponseException, URIValidationException {
         when(internalApiClientFactory.get()).thenReturn(internalApiClient);
         when(internalApiClient.privateTransaction()).thenReturn(privateTransactionResourceHandler);
         when(privateTransactionResourceHandler.patch(any(), any())).thenReturn(privateTransactionPatch);
@@ -118,11 +121,22 @@ class TransactionsApiClientTest {
         Transaction transaction = new Transaction();
         transactionsApiClient.patchTransaction("patch-uri", transaction);
         verify(patchResponse).getStatusCode();
-
-        when(patchResponse.getStatusCode()).thenReturn(400);
-        transactionsApiClient.patchTransaction("patch-uri", transaction);
-        verify(responseHandler).handle(400);
     }
+
+    @Test
+    void patchTransactionHandlesError() throws ApiErrorResponseException, URIValidationException {
+        when(internalApiClientFactory.get()).thenReturn(internalApiClient);
+        when(internalApiClient.privateTransaction()).thenReturn(privateTransactionResourceHandler);
+        when(privateTransactionResourceHandler.patch(any(), any())).thenReturn(privateTransactionPatch);
+        when(privateTransactionPatch.queryParams(any())).thenReturn(privateTransactionPatch);
+        ApiResponse<Void> patchResponse = mock(ApiResponse.class);
+        when(privateTransactionPatch.execute()).thenReturn(patchResponse);
+        when(patchResponse.getStatusCode()).thenReturn(400);
+        Transaction transaction = new Transaction();
+        transactionsApiClient.patchTransaction("patch-uri", transaction);
+        verify(responseHandler).handle(PATCH_API_CALL, 400);
+    }
+
 
     @Test
     void patchTransactionHandlesApiErrorResponseException() throws ApiErrorResponseException, URIValidationException {
@@ -134,7 +148,7 @@ class TransactionsApiClientTest {
         Transaction transaction = new Transaction();
 
         transactionsApiClient.patchTransaction("patch-uri", transaction);
-        verify(responseHandler).handle(any(ApiErrorResponseException.class));
+        verify(responseHandler).handle(anyString(), any(ApiErrorResponseException.class));
     }
 
     @Test
@@ -147,6 +161,6 @@ class TransactionsApiClientTest {
         Transaction transaction = new Transaction();
 
         transactionsApiClient.patchTransaction("patch-uri", transaction);
-        verify(responseHandler).handle(any(URIValidationException.class));
+        verify(responseHandler).handle(anyString(), any(URIValidationException.class));
     }
 }
