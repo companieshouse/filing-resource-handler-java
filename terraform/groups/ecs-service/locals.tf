@@ -4,7 +4,7 @@ locals {
   name_prefix                 = "${local.stack_name}-${var.environment}"
   global_prefix               = "global-${var.environment}"
   service_name                = "filing-resource-handler-java"
-  container_port              = "8080"
+  container_port              = "8081"
   docker_repo                 = "filing-resource-handler-java"
   kms_alias                   = "alias/${var.aws_profile}/environment-services-kms"
   healthcheck_path            = "/healthcheck"
