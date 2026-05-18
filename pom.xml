@@ -61,6 +61,15 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- start fix versions for vulnerable transitive dependencies -->
+            <!-- CVE-2026-45292  -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-api</artifactId>
+                <version>1.62.0</version>
+                <scope>compile</scope>
+            </dependency>
+            <!-- end fix versions for vulnerable transitive dependencies -->
         </dependencies>
     </dependencyManagement>
     <dependencies>
