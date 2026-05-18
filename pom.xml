@@ -7,19 +7,19 @@
     <parent>
         <groupId>uk.gov.companieshouse</groupId>
         <artifactId>companies-house-parent</artifactId>
-        <version>2.1.12</version>
+        <version>2.1.14</version>
         <relativePath/>
     </parent>
     <properties>
-        <kafka-models.version>3.0.30</kafka-models.version>
-        <private-api-sdk-java.version>4.0.492</private-api-sdk-java.version>
-        <structured-logging.version>3.0.52</structured-logging.version>
+        <kafka-models.version>3.0.31</kafka-models.version>
+        <private-api-sdk-java.version>6.0.13</private-api-sdk-java.version>
+        <structured-logging.version>3.0.57</structured-logging.version>
         <aspectjweaver-version>1.9.25.1</aspectjweaver-version>
         <avro-version>1.12.1</avro-version>
         <commons-lang3-version>3.20.0</commons-lang3-version>
         <kafka-clients-version>3.9.1</kafka-clients-version>
         <log4j-api.version>2.25.3</log4j-api.version>
-        <spring.boot.version>4.0.5</spring.boot.version>
+        <spring.boot.version>4.0.6</spring.boot.version>
         <wiremock.version>3.13.2</wiremock.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <java.version>21</java.version>
@@ -33,13 +33,20 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <assertj-core.version>3.27.7</assertj-core.version>
-        <reactor-netty-http.version>1.3.4</reactor-netty-http.version>
-        <netty-all.version>4.2.12.Final</netty-all.version>
         <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
         <testcontainers-bom.version>1.21.4</testcontainers-bom.version>
+        <netty-bom.version>4.2.13.Final</netty-bom.version>
     </properties>
     <dependencyManagement>
         <dependencies>
+            <!-- CVE-2025-33042 -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -54,37 +61,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- start fix versions for vulnerable transitive dependencies -->
-            <!-- CVE-2025-33042 -->
-            <dependency>
-                <groupId>org.apache.avro</groupId>
-                <artifactId>avro</artifactId>
-                <version>1.12.1</version>
-            </dependency>
-            <!-- GHSA-72hv-8253-57qq -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.21.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.21</version>
-            </dependency>
-            <!-- GHSA-72hv-8253-57qq -->
-            <dependency>
-                <groupId>tools.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>3.1.0</version>
-            </dependency>
-            <!-- CVE-2026-29062 -->
-            <dependency>
-                <groupId>tools.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>3.1.0</version>
-            </dependency>
-            <!-- end fix versions for vulnerable transitive dependencies -->
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -104,12 +80,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <!-- companies house -->
@@ -117,18 +91,6 @@
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>kafka-models</artifactId>
             <version>${kafka-models.version}</version>
-            <exclusions>
-                <!-- CVE-2025-66566 -->
-                <exclusion>
-                    <groupId>org.lz4</groupId>
-                    <artifactId>lz4-java</artifactId>
-                </exclusion>
-                <!-- CVE-2026-1605 -->
-                <exclusion>
-                    <groupId>org.eclipse.jetty.ee10</groupId>
-                    <artifactId>jetty-ee10-webapp</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
@@ -159,6 +121,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -169,18 +132,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-kafka-test</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <!-- CVE-2025-66566 -->
-                <exclusion>
-                    <groupId>org.lz4</groupId>
-                    <artifactId>lz4-java</artifactId>
-                </exclusion>
-                <!-- hash4j not present in artifactory -->
-                <exclusion>
-                    <groupId>com.dynatrace.hash4j</groupId>
-                    <artifactId>hash4j</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -197,20 +148,6 @@
             <artifactId>wiremock-standalone</artifactId>
             <version>${wiremock-standalone.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webflux</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.projectreactor.netty</groupId>
-            <artifactId>reactor-netty-http</artifactId>
-            <version>${reactor-netty-http.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>${netty-all.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
