@@ -89,7 +89,7 @@ public class TestUtils {
     }
 
     public static transaction_closed getTransactionClosedMessage() {
-        return new transaction_closed(1, "transactions/987654");
+        return new transaction_closed(1, "/transactions/987654");
     }
 
     @NotNull

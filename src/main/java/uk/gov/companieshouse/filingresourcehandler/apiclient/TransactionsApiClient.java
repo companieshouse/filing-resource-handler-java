@@ -22,7 +22,7 @@ import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 @Component
 public class TransactionsApiClient {
 
-    private static final String TRANSACTION_URI = "/private/%s";
+    private static final String TRANSACTION_URI = "/private%s";
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
     private static final List<QueryParam> FORCE_QUERY_PARAM = List.of(new QueryParam("force", "true"));
     private static final String GET_API_CALL = "GET call to transaction";
@@ -42,6 +42,8 @@ public class TransactionsApiClient {
         ApiResponse<Transaction> response;
         try {
             String requestUri = TRANSACTION_URI.formatted(transactionUrl);
+            DataMapHolder.get().uri(requestUri);
+            LOGGER.info("Calling GET transaction for TransactionUri %s".formatted(requestUri), DataMapHolder.getLogMap());
             response = internalApiClient.privateTransaction().get(requestUri).execute();
             if (response.getStatusCode() != HttpStatus.OK.value()) {
                 LOGGER.error("Failed to execute get transactions transactionId: %s with status code: %d".formatted(requestUri, response.getStatusCode()), DataMapHolder.getLogMap());

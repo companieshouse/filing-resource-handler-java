@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionClosedMessage;
 
 @ExtendWith(MockitoExtension.class)
 class LoggingKafkaListenerAspectTest {
@@ -31,8 +32,6 @@ class LoggingKafkaListenerAspectTest {
     @Mock
     private MessageHeaders headers;
 
-    @Mock
-    private transaction_closed transactionClosed;
     private LoggingKafkaListenerAspect loggingKafkaListenerAspect;
 
     @BeforeEach
@@ -46,7 +45,7 @@ class LoggingKafkaListenerAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[]{message});
         when(message.getHeaders()).thenReturn(headers);
         when(headers.get(anyString())).thenReturn(null);
-        when(message.getPayload()).thenReturn(transactionClosed);
+        when(message.getPayload()).thenReturn(getTransactionClosedMessage());
         when(joinPoint.proceed()).thenReturn("result");
 
         Object result = loggingKafkaListenerAspect.manageStructuredLogging(joinPoint);
@@ -64,7 +63,7 @@ class LoggingKafkaListenerAspectTest {
         when(headers.get("kafka_receivedTopic")).thenReturn("topic");
         when(headers.get("kafka_receivedPartitionId")).thenReturn(1);
         when(headers.get("kafka_offset")).thenReturn(10L);
-        when(message.getPayload()).thenReturn(transactionClosed);
+        when(message.getPayload()).thenReturn(getTransactionClosedMessage());
 
         when(joinPoint.proceed()).thenThrow(new RetryableException("retry"));
 
@@ -81,7 +80,7 @@ class LoggingKafkaListenerAspectTest {
         when(headers.get("kafka_receivedTopic")).thenReturn("topic");
         when(headers.get("kafka_receivedPartitionId")).thenReturn(1);
         when(headers.get("kafka_offset")).thenReturn(10L);
-        when(message.getPayload()).thenReturn(transactionClosed);
+        when(message.getPayload()).thenReturn(getTransactionClosedMessage());
 
         when(joinPoint.proceed()).thenThrow(new RetryableException("retry"));
 
@@ -93,7 +92,7 @@ class LoggingKafkaListenerAspectTest {
     void manageStructuredLoggingHandlesNonRetryableException() throws Throwable {
         when(joinPoint.getArgs()).thenReturn(new Object[]{message});
         when(message.getHeaders()).thenReturn(headers);
-        when(message.getPayload()).thenReturn(transactionClosed);
+        when(message.getPayload()).thenReturn(getTransactionClosedMessage());
 
         when(joinPoint.proceed()).thenThrow(new RuntimeException("fail"));
 
