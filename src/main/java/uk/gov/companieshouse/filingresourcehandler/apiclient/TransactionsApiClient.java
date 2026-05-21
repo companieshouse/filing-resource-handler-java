@@ -42,7 +42,6 @@ public class TransactionsApiClient {
         ApiResponse<Transaction> response;
         try {
             String requestUri = TRANSACTION_URI.formatted(transactionUrl);
-            DataMapHolder.get().uri(requestUri);
             LOGGER.info("Calling GET transaction for TransactionUri %s".formatted(requestUri), DataMapHolder.getLogMap());
             response = internalApiClient.privateTransaction().get(requestUri).execute();
             if (response.getStatusCode() != HttpStatus.OK.value()) {
@@ -64,7 +63,7 @@ public class TransactionsApiClient {
         InternalApiClient client = internalApiClientFactory.get();
         client.getHttpClient().setRequestId(DataMapHolder.getRequestId());
         patchRequestUri = TRANSACTION_URI.formatted(patchRequestUri);
-        DataMapHolder.get().uri(patchRequestUri);
+        DataMapHolder.get().resourceUri(patchRequestUri);
         LOGGER.info("Calling PATCH transaction for patchBody %s".formatted(transaction), DataMapHolder.getLogMap());
 
         try {

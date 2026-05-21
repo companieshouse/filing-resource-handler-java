@@ -60,7 +60,7 @@ public class LoggingKafkaListenerAspect {
                     .offset(offset);
 
             // Add to log map last to ensure other headers are logged in the event of invalid payload
-            DataMapHolder.get().transactionId(extractTransactionId(message.getPayload()));
+            DataMapHolder.get().uri(extractTransactionId(message.getPayload()));
 
             LOGGER.info(LOG_MESSAGE_RECEIVED, DataMapHolder.getLogMap());
 
@@ -87,13 +87,7 @@ public class LoggingKafkaListenerAspect {
 
     private String extractTransactionId(Object payload) {
         if (payload instanceof transaction_closed transactionClosed) {
-            String transactionUrl = transactionClosed.getTransactionUrl();
-            if (transactionUrl != null && !transactionUrl.isBlank()) {
-                int lastSlashIndex = transactionUrl.lastIndexOf("/");
-                if (lastSlashIndex != -1 && lastSlashIndex != transactionUrl.length() - 1) {
-                    return transactionUrl.substring(lastSlashIndex + 1);
-                }
-            }
+            return transactionClosed.getTransactionUrl();
         }
         String errorMessage = "Invalid payload type, payload: [%s]".formatted(payload.toString());
         LOGGER.error(errorMessage, DataMapHolder.getLogMap());
