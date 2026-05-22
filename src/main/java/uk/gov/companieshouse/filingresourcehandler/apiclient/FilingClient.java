@@ -4,8 +4,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.filingresourcehandler.logging.DataMapHolder;
 import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
@@ -22,11 +22,11 @@ public class FilingClient {
     private static final String GET_RESOURCE_DATA_URI = "/private%s/filings";
     private final ResponseHandler responseHandler;
 
-    private final WebClient webClient;
+    private final RestClient restClient;
 
-    public FilingClient(ResponseHandler responseHandler, WebClient webClient) {
+    public FilingClient(ResponseHandler responseHandler, RestClient restClient) {
         this.responseHandler = responseHandler;
-        this.webClient = webClient;
+        this.restClient = restClient;
     }
 
 
@@ -36,7 +36,7 @@ public class FilingClient {
         String requestId = DataMapHolder.getRequestId();
         try {
             MultiValueMap<String, String> queryParams = getQueryParams(link, companyName, companyNumber);
-            response = webClient.get()
+            response = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path(requestUri).queryParams(queryParams).build())
                     .headers(headers -> {
                         if (requestId != null && !requestId.trim().isEmpty()) {
@@ -44,9 +44,8 @@ public class FilingClient {
                         }
                     })
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<FilingApi[]>() {
-                    })
-                    .block();
+                    .body(new ParameterizedTypeReference<>() {
+                    });
             if (response == null) {
                 String errorMessage = "Failed to execute GET getFilingApi with requestUri: %s with null Response".formatted(requestUri);
                 RetryErrorHandler.logAndThrowRetryableException(errorMessage);
@@ -54,9 +53,9 @@ public class FilingClient {
             LOGGER.info("Successfully executed GET Filings", DataMapHolder.getLogMap());
             return Optional.of(response);
 
-        } catch (WebClientResponseException ex) {
-            String webClientExceptionMessage = "Failed to execute GET getFilingApi with requestUri: %s with status code: %s and stacktrace %s".formatted(requestUri, ex.getStatusCode(), ex.getStackTrace());
-            responseHandler.handle(webClientExceptionMessage, ex);
+        } catch (RestClientResponseException ex) {
+            String restClientExceptionMessage = "Failed to execute GET getFilingApi with requestUri: %s with status code: %s and stacktrace %s".formatted(requestUri, ex.getStatusCode(), ex.getStackTrace());
+            responseHandler.handle(restClientExceptionMessage, ex);
         } catch (Exception ex) {
             String defaultErrorMessage = "Unexpected error occurred during GET getFilingApi with requestUri: %s with message: %s and stacktrace %s".formatted(requestUri, ex.getMessage(), ex.getStackTrace());
             LOGGER.error(defaultErrorMessage, DataMapHolder.getLogMap());

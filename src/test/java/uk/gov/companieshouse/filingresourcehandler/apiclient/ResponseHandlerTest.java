@@ -7,7 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.RestClientResponseException;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.filingresourcehandler.exception.NonRetryableException;
@@ -28,7 +28,7 @@ class ResponseHandlerTest {
 
 
     @Mock
-    WebClientResponseException webClientResponseException;
+    RestClientResponseException restClientResponseException;
 
     @Mock
     ApiErrorResponseException apiErrorResponseException;
@@ -71,7 +71,8 @@ class ResponseHandlerTest {
 
     @Test
     void handleWebClientResponseExceptionThrowsNonRetryableForBadRequestOrConflict() {
-        WebClientResponseException ex = WebClientResponseException.create(
+        RestClientResponseException ex = new RestClientResponseException(
+                "Parameters Missing",
                 400,
                 "Bad Request",
                 HttpHeaders.EMPTY,
@@ -84,8 +85,8 @@ class ResponseHandlerTest {
 
     @Test
     void handleWebClientResponseExceptionThrowsRetryableForOtherStatus() {
-        when(webClientResponseException.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
-        assertThatThrownBy(() -> handler.handle("error", webClientResponseException))
+        when(restClientResponseException.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThatThrownBy(() -> handler.handle("error", restClientResponseException))
                 .isInstanceOf(RetryableException.class);
     }
 
@@ -96,6 +97,17 @@ class ResponseHandlerTest {
         int statusCode = HttpStatus.CONFLICT.value();
         assertThatThrownBy(() -> spyHandler.handle(GET_API_CALL, statusCode))
                 .isInstanceOf(NonRetryableException.class);
+    }
+
+    @Test
+    void handleExceptionThrowsRetryableExceptionWithMessageAndCause() {
+        String errorMessage = "generic error";
+        Exception cause = new RuntimeException("root cause");
+
+        assertThatThrownBy(() -> handler.handle(errorMessage, cause))
+                .isInstanceOf(RetryableException.class)
+                .hasMessageContaining(errorMessage)
+                .hasCause(cause);
     }
 }
 
