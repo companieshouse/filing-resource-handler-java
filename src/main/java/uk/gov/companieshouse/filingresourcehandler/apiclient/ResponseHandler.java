@@ -4,7 +4,7 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.RestClientResponseException;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.filingresourcehandler.exception.NonRetryableException;
@@ -45,7 +45,7 @@ public class ResponseHandler {
         throw new NonRetryableException(URI_VALIDATION_EXCEPTION_MESSAGE, ex);
     }
 
-    public void handle(String errorMessage, WebClientResponseException ex) {
+    public void handle(String errorMessage, RestClientResponseException ex) {
         final int statusCode = ex.getStatusCode().value();
         if (HttpStatus.BAD_REQUEST.value() == statusCode || HttpStatus.CONFLICT.value() == statusCode) {
             LOGGER.error(errorMessage, ex, DataMapHolder.getLogMap());

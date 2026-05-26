@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.netty.http.client.HttpClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
 import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.api.http.ApiKeyHttpClient;
 
-import java.time.Duration;
 import java.util.function.Supplier;
 
 @Configuration
@@ -25,25 +23,24 @@ public class AppConfig {
     @Value("${api.local.url}")
     private String apiLocalUrl;
 
-    @Value("${internal.api-url}")
-    private String apiUrl;
-
     @Bean
     Supplier<InternalApiClient> internalApiClientSupplier() {
         return () -> {
             InternalApiClient internalApiClient = new InternalApiClient(new ApiKeyHttpClient(internalApiKey));
-            internalApiClient.setBasePath(apiUrl);
+            internalApiClient.setBasePath(apiLocalUrl);
             return internalApiClient;
         };
     }
 
+
     @Bean
-    public WebClient webClient() {
-        HttpClient httpClient = HttpClient.create().responseTimeout(Duration.ofMillis(timeoutMilliseconds));
-        return WebClient.builder()
-                .defaultHeaders(headers ->
-                        headers.setBasicAuth(internalApiKey, "")
-                ).baseUrl(apiLocalUrl).clientConnector(new ReactorClientHttpConnector(httpClient))
+    public RestClient restClient() {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(timeoutMilliseconds);
+        requestFactory.setReadTimeout(timeoutMilliseconds);
+        return RestClient.builder().baseUrl(apiLocalUrl)
+                .requestFactory(requestFactory)
+                .defaultHeader("Authorization", internalApiKey)
                 .build();
     }
 

@@ -1,14 +1,17 @@
 package uk.gov.companieshouse.filingresourcehandler.apiclient;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.filingresourcehandler.exception.RetryableException;
 import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
@@ -19,88 +22,99 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @ExtendWith(MockitoExtension.class)
 class FilingClientTest {
 
+    private static final String FILING_URI = "http://localhost/private/transactions/123/filings?resource=/transactions/123&company_name=companyName&company_number=00006400";
+    private static final String TRANSACTIONS_123 = "/transactions/123";
+    private static final String COMPANY_NAME = "companyName";
+    private static final String COMPANY_NUMBER = "00006400";
+    private static final String UNEXPECTED_ERROR_OCCURRED = "Unexpected error occurred";
     @Mock
     private ResponseHandler responseHandler;
-    @Mock
-    private WebClient webClient;
-    @Mock
-    private WebClient.RequestHeadersUriSpec requestHeadersUriSpec;
-    @Mock
-    private WebClient.RequestHeadersSpec requestHeadersSpec;
-    @Mock
-    private WebClient.ResponseSpec responseSpec;
-    @Mock
-    private Mono<FilingApi[]> monoFilingApiArray;
-    @InjectMocks
+
+    private MockRestServiceServer server;
     private FilingClient client;
 
+    @BeforeEach
+    void setUp() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("http://localhost");
+        server = MockRestServiceServer.bindTo(builder).build();
+        client = new FilingClient(responseHandler, builder.build());
+    }
 
     @Test
     void getFilingApiReturnsFilingApiArrayOnSuccess() {
-        FilingApi[] expected = new FilingApi[]{new FilingApi()};
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(any(java.util.function.Function.class))).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(any(org.springframework.core.ParameterizedTypeReference.class))).thenReturn(monoFilingApiArray);
-        when(monoFilingApiArray.block()).thenReturn(expected);
+        server.expect(requestTo(FILING_URI))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[{\"kind\":\"test-kind\"}]", MediaType.APPLICATION_JSON));
 
-        Optional<FilingApi[]> result = client.getFilingApi("link", "companyName", "companyNumber");
-        assertThat(result).contains(expected);
+        Optional<FilingApi[]> result = client.getFilingApi(TRANSACTIONS_123, COMPANY_NAME, COMPANY_NUMBER);
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).hasSize(1);
+        assertThat(result.get()[0].getKind()).isEqualTo("test-kind");
+        server.verify();
     }
 
     @Test
     void getFilingApiThrowsRetryableExceptionOnNullResponse() {
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(any(java.util.function.Function.class))).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(any(org.springframework.core.ParameterizedTypeReference.class))).thenReturn(monoFilingApiArray);
-        when(monoFilingApiArray.block()).thenReturn(null);
-        doThrow(new RetryableException("Unexpected error occurred")).when(responseHandler).handle(any(), any(Exception.class));
+        server.expect(requestTo(FILING_URI))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withNoContent());
+
+        doThrow(new RetryableException(UNEXPECTED_ERROR_OCCURRED))
+                .when(responseHandler)
+                .handle(anyString(), any(Exception.class));
 
         try (var mocked = Mockito.mockStatic(RetryErrorHandler.class)) {
             mocked.when(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.anyString()))
                     .thenThrow(new RetryableException("retryable"));
-            assertThrows(RetryableException.class, () -> client.getFilingApi("link", "companyName", "companyNumber"));
+
+            assertThrows(RetryableException.class,
+                    () -> client.getFilingApi(TRANSACTIONS_123, COMPANY_NAME, COMPANY_NUMBER));
+
             mocked.verify(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.anyString()));
         }
+
+        server.verify();
     }
 
     @Test
-    void getFilingApiHandlesWebClientResponseException() {
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(any(java.util.function.Function.class))).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(any(org.springframework.core.ParameterizedTypeReference.class))).thenReturn(monoFilingApiArray);
-        when(monoFilingApiArray.block()).thenThrow(WebClientResponseException.class);
+    void getFilingApiHandlesRestClientResponseException() {
+        doThrow(new RetryableException("retryable from handler"))
+                .when(responseHandler)
+                .handle(anyString(), any(RestClientResponseException.class));
 
-        client.getFilingApi("link", "companyName", "companyNumber");
-        verify(responseHandler).handle(any(String.class), any(WebClientResponseException.class));
+        server.expect(requestTo(FILING_URI))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThatThrownBy(() -> client.getFilingApi(TRANSACTIONS_123, COMPANY_NAME, COMPANY_NUMBER))
+                .isInstanceOf(RetryableException.class)
+                .hasMessageContaining("retryable from handler");
+
+        verify(responseHandler).handle(anyString(), any(RestClientResponseException.class));
+        server.verify();
     }
 
     @Test
     void getFilingApiHandlesGenericException() {
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(any(java.util.function.Function.class))).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(any(org.springframework.core.ParameterizedTypeReference.class))).thenReturn(monoFilingApiArray);
-        when(monoFilingApiArray.block()).thenThrow(new RuntimeException("fail"));
-        // Use doThrow for void method
-        doThrow(new RetryableException("Unexpected error occurred")).when(responseHandler).handle(any(), any(Exception.class));
+        doThrow(new RetryableException(UNEXPECTED_ERROR_OCCURRED))
+                .when(responseHandler)
+                .handle(anyString(), any(Exception.class));
 
-        assertThatThrownBy(() -> client.getFilingApi("link", "companyName", "companyNumber"))
+        assertThatThrownBy(() -> client.getFilingApi(TRANSACTIONS_123, COMPANY_NAME, null))
                 .isInstanceOf(RetryableException.class)
-                .hasMessageContaining("Unexpected error occurred");
+                .hasMessageContaining(UNEXPECTED_ERROR_OCCURRED);
     }
 }

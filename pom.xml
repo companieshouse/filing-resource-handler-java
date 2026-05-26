@@ -11,8 +11,8 @@
         <relativePath/>
     </parent>
     <properties>
-        <kafka-models.version>3.0.31</kafka-models.version>
-        <private-api-sdk-java.version>6.0.13</private-api-sdk-java.version>
+        <kafka-models.version>3.0.33</kafka-models.version>
+        <private-api-sdk-java.version>6.0.17</private-api-sdk-java.version>
         <structured-logging.version>3.0.57</structured-logging.version>
         <aspectjweaver-version>1.9.25.1</aspectjweaver-version>
         <avro-version>1.12.1</avro-version>
@@ -35,18 +35,9 @@
         <assertj-core.version>3.27.7</assertj-core.version>
         <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
         <testcontainers-bom.version>1.21.4</testcontainers-bom.version>
-        <netty-bom.version>4.2.13.Final</netty-bom.version>
     </properties>
     <dependencyManagement>
         <dependencies>
-            <!-- CVE-2025-33042 -->
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-bom</artifactId>
-                <version>${netty-bom.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -110,9 +101,8 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
         </dependency>
-
         <!-- companies house -->
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
