@@ -9,6 +9,7 @@ import uk.gov.companieshouse.filingresourcehandler.logging.DataMapHolder;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,7 +31,7 @@ public class FilingPatchService {
 
 
     public void addFilingToPatch(Map<String, Filing> transactionsFilingMap, FilingApi filing, String submissionId, String link, String companyNumber) {
-        String filingKind = filing.getKind();
+        String filingKind = filing.getKind() != null ? filing.getKind() : "";
         if (filingKind != null && filingKind.toLowerCase().contains(INSOLVENCY)) {
             companyNumber = Optional.ofNullable(filing.getData())
                     .map(data -> data.get(COMPANY_NUMBER))
@@ -42,7 +43,8 @@ public class FilingPatchService {
                         return new NonRetryableException(message);
                     });
         }
-        Map<String, String> links = Map.of(RESOURCE, link);
+        Map<String, String> links = new HashMap<>();
+        links.put(RESOURCE, link != null ? link : "");
         Filing patchFiling = filingFactory.getFiling(filing, companyNumber, links);
         transactionsFilingMap.put(submissionId, patchFiling);
     }

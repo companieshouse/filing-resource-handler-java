@@ -83,4 +83,131 @@ class FilingReceivedFactoryTest {
             mocked.verify(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.contains("txn-id")));
         }
     }
+
+    @Test
+    void getFilingReceivedThrowsWhenTransactionIsNull() {
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory("oauth-client-id");
+        List<uk.gov.companieshouse.filing.received.Transaction> items = TestUtils.getEmptyItemsList();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> factory.getFilingReceived(items, null))
+                .isInstanceOf(uk.gov.companieshouse.filingresourcehandler.exception.RetryableException.class)
+                .hasMessageContaining("Transaction is null");
+    }
+
+
+    @Test
+    void getFilingReceivedThrowsWhenFirstItemDataIsNullAndCompanyFieldsBlank() {
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory("oauth-client-id");
+        Transaction transaction = TestUtils.getTransactionWithEmptyCompanyFields();
+        transaction.setId("txn-null-data");
+
+        uk.gov.companieshouse.filing.received.Transaction item =
+                new uk.gov.companieshouse.filing.received.Transaction(); // data == null
+        List<uk.gov.companieshouse.filing.received.Transaction> items = List.of(item);
+
+        try (var mocked = Mockito.mockStatic(RetryErrorHandler.class)) {
+            mocked.when(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.anyString()))
+                    .thenThrow(new RuntimeException("retryable"));
+            assertThrows(RuntimeException.class,
+                    () -> factory.getFilingReceived(items, transaction));
+            mocked.verify(() -> RetryErrorHandler.logAndThrowRetryableException(
+                    Mockito.contains("no data")));
+        }
+    }
+
+    @Test
+    void getFilingReceivedUsesApiFilingChannelWhenApplicationIdDiffers() {
+        String oauthClientId = "client-id";
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory(oauthClientId);
+        Transaction transaction = TestUtils.getTransactionForFilingReceived();
+        uk.gov.companieshouse.api.model.transaction.SubmittedBy submittedBy =
+                new uk.gov.companieshouse.api.model.transaction.SubmittedBy();
+        submittedBy.setApplicationId("a-different-app");
+        transaction.setSubmittedBy(submittedBy);
+
+        FilingReceived filingReceived = factory.getFilingReceived(
+                TestUtils.getEmptyItemsList(), transaction);
+
+        assertThat(filingReceived.getChannelId()).isEqualTo("api-filing");
+        assertThat(filingReceived.getApplicationId()).isEqualTo("a-different-app");
+    }
+
+    @Test
+    void getFilingReceivedHandlesNullSubmittedByAndNullClosedBy() {
+        String oauthClientId = "client-id";
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory(oauthClientId);
+        Transaction transaction = TestUtils.getTransactionForFilingReceived();
+        transaction.setSubmittedBy(null);
+        transaction.setClosedBy(null);
+        FilingReceived filingReceived = factory.getFilingReceived(
+                TestUtils.getEmptyItemsList(), transaction);
+
+        assertThat(filingReceived.getApplicationId()).isEmpty();
+        assertThat(filingReceived.getChannelId()).isEqualTo("api-filing");
+        assertThat(filingReceived.getPresenter().getForename()).isNull();
+        assertThat(filingReceived.getPresenter().getSurname()).isNull();
+        assertThat(filingReceived.getPresenter().getLanguage()).isNull();
+        assertThat(filingReceived.getPresenter().getUserId()).isNull();
+    }
+
+    @Test
+    void getFilingReceivedHandlesNullTransactionIdWhenFieldsPopulated() {
+        String oauthClientId = "client-id";
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory(oauthClientId);
+        Transaction transaction = TestUtils.getTransactionForFilingReceived();
+        transaction.setId(null);
+
+        FilingReceived filingReceived = factory.getFilingReceived(
+                TestUtils.getEmptyItemsList(), transaction);
+
+        assertThat(filingReceived.getSubmission().getTransactionId()).isEmpty();
+    }
+
+    @Test
+    void getFilingReceivedKeepsBlankFieldsWhenJsonHasNoCompanyKeys() throws Exception {
+        String oauthClientId = "oauth-client-id";
+        FilingReceivedFactory factory = new FilingReceivedFactory(oauthClientId, objectMapper);
+
+        uk.gov.companieshouse.filing.received.Transaction item =
+                new uk.gov.companieshouse.filing.received.Transaction();
+        item.setData("{}");
+        List<uk.gov.companieshouse.filing.received.Transaction> items = List.of(item);
+
+        Transaction transaction = TestUtils.getTransactionWithEmptyCompanyFields();
+        transaction.setId("txn-no-keys");
+        transaction.setClosedBy(TestUtils.getClosedByMap());
+
+        // Return a map with neither company_number nor company_name -> exercises null branches
+        when(objectMapper.readValue(Mockito.eq("{}"), Mockito.<com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>>any()))
+                .thenReturn(java.util.Map.of("other_field", "x"));
+
+        FilingReceived filingReceived = factory.getFilingReceived(items, transaction);
+
+        assertThat(filingReceived.getSubmission().getCompanyName()).isEmpty();
+        assertThat(filingReceived.getSubmission().getCompanyNumber()).isEmpty();
+    }
+
+    @Test
+    void getFilingReceivedTreatsNullReadValueAsEmptyMap() throws Exception {
+        String oauthClientId = "oauth-client-id";
+        FilingReceivedFactory factory = new FilingReceivedFactory(oauthClientId, objectMapper);
+
+        uk.gov.companieshouse.filing.received.Transaction item =
+                new uk.gov.companieshouse.filing.received.Transaction();
+        item.setData("{}");
+        List<uk.gov.companieshouse.filing.received.Transaction> items = List.of(item);
+
+        Transaction transaction = TestUtils.getTransactionWithEmptyCompanyFields();
+        transaction.setId("txn-null-map");
+        transaction.setClosedBy(TestUtils.getClosedByMap());
+
+        // Force readValue to return null -> exercises Optional.ofNullable(...).orElse(Map.of())
+        when(objectMapper.readValue(Mockito.eq("{}"), Mockito.<com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>>any()))
+                .thenReturn(null);
+
+        FilingReceived filingReceived = factory.getFilingReceived(items, transaction);
+
+        assertThat(filingReceived.getSubmission().getCompanyName()).isEmpty();
+        assertThat(filingReceived.getSubmission().getCompanyNumber()).isEmpty();
+    }
 }

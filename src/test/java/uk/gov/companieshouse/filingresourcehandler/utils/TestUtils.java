@@ -153,6 +153,27 @@ public class TestUtils {
         return transaction;
     }
 
+    /**
+     * Returns a transaction with three independent resources (appointment/1, appointment/2, appointment/3).
+     * Used by the "three resources" integration test scenario.
+     */
+    public static Transaction getTransactionWithThreeResources() {
+        Transaction transaction = getTransaction();
+
+        Map<String, Resource> resources = new HashMap<>();
+        for (String id : List.of("1", "2", "3")) {
+            String path = "/transactions/" + TEST_TRANSACTION_ID + "/appointment/" + id;
+            Resource resource = new Resource();
+            resource.setKind("appointment");
+            Map<String, String> links = new HashMap<>();
+            links.put("resource", path);
+            resource.setLinks(links);
+            resources.put(path, resource);
+        }
+        transaction.setResources(resources);
+        return transaction;
+    }
+
     public static Map<String, Resource> getStringResourceMap() {
         Map<String, Resource> resources = new HashMap<>();
         Resource resource = new Resource();

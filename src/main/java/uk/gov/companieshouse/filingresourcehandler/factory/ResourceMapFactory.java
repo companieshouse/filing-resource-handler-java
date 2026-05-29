@@ -11,36 +11,51 @@ import java.util.Map;
 @Component
 public class ResourceMapFactory {
 
-    public Map<String, Resource> createResourceMap(Transaction transaction, String transactionFilingMode, String transactionUrl) {
+    private static final String DEFAULT = "default";
+    private static final String ERROR_NO_MATCH =
+            "filing mode %s is set for a master resource but no resource on transaction URL %s has that kind";
+    private static final String ERROR_MULTIPLE_MATCHES =
+            "filing mode %s is set for a master resource but more than one resource on the transaction URL %s has that kind";
+
+    public Map<String, Resource> createResourceMap(Transaction transaction,
+                                                   String transactionFilingMode,
+                                                   String transactionUrl) {
         Map<String, Resource> resources = transaction.getResources();
-        if (transaction.getFilingMode() != null && !transaction.getFilingMode().isBlank() && !transaction.getFilingMode().equals("default")) {
-            resources = new HashMap<>();
-            populateResourceMap(transaction, transactionFilingMode, resources, transactionUrl);
+
+        boolean isCustomMode = transactionFilingMode != null
+                && !transactionFilingMode.isBlank()
+                && !DEFAULT.equals(transactionFilingMode);
+
+        if (!isCustomMode || resources == null) {
+            return resources != null ? resources : new HashMap<>();
         }
-        return resources;
+
+        Map<String, Resource> filtered = getStringResourceMap(transactionFilingMode, resources);
+
+        if (filtered.isEmpty()) {
+            RetryErrorHandler.logAndThrowRetryableException(
+                    ERROR_NO_MATCH.formatted(transactionFilingMode, transactionUrl));
+        } else if (filtered.size() > 1) {
+            RetryErrorHandler.logAndThrowRetryableException(
+                    ERROR_MULTIPLE_MATCHES.formatted(transactionFilingMode, transactionUrl));
+        }
+        return filtered;
     }
 
-    private void populateResourceMap(Transaction transaction, String transactionFilingMode, Map<String, Resource> resources, String transactionUrl) {
-        for (Map.Entry<String, Resource> resourceEntry : transaction.getResources().entrySet()) {
-            String kind = resourceEntry.getValue().getKind();
+    private static Map<String, Resource> getStringResourceMap(String transactionFilingMode, Map<String, Resource> resources) {
+        Map<String, Resource> filtered = new HashMap<>();
+        for (Map.Entry<String, Resource> entry : resources.entrySet()) {
+            Resource resource = entry.getValue();
+            String kind = resource != null ? resource.getKind() : null;
             if (kind == null) {
                 continue;
             }
-            String mainKind = kind.indexOf('#') == -1 ? kind : kind.substring(0, kind.indexOf('#'));
+            int hashIdx = kind.indexOf('#');
+            String mainKind = hashIdx == -1 ? kind : kind.substring(0, hashIdx);
             if (mainKind.equals(transactionFilingMode)) {
-                resources.put(resourceEntry.getKey(), resourceEntry.getValue());
+                filtered.put(entry.getKey(), resource);
             }
         }
-        if (resources.isEmpty()) {
-            String errorMessage = ("filing mode %s is set for a master resource but no resource on " +
-                    "transaction URL %s has that kind").formatted(transactionFilingMode, transactionUrl);
-            RetryErrorHandler.logAndThrowRetryableException(errorMessage);
-        } else if (resources.size() > 1) {
-            String errorMessage = ("filing mode %s is set for a master resource but more than one" +
-                    " resource on the transaction URL %s has that kind").
-                    formatted(transactionFilingMode, transactionUrl);
-            RetryErrorHandler.logAndThrowRetryableException(errorMessage);
-        }
+        return filtered;
     }
-
 }

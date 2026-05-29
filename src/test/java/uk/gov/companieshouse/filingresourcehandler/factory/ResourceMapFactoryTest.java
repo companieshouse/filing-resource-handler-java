@@ -102,5 +102,76 @@ class ResourceMapFactoryTest {
                     Mockito.argThat(msg -> msg.contains("more than one") && msg.contains("custom-kind"))));
         }
     }
+
+    @Test
+    void testCreateResourceMapNullFilingModeReturnsOriginalResources() {
+        ResourceMapFactory factory = new ResourceMapFactory();
+        Transaction transaction = new Transaction();
+        Map<String, Resource> originalResources = new HashMap<>();
+        Resource resource = new Resource();
+        resource.setKind("any-kind");
+        originalResources.put("k", resource);
+        transaction.setResources(originalResources);
+
+        Map<String, Resource> result = factory.createResourceMap(transaction, null, "url");
+
+        assertThat(result).isEqualTo(originalResources);
+    }
+
+    @Test
+    void testCreateResourceMapBlankFilingModeReturnsOriginalResources() {
+        ResourceMapFactory factory = new ResourceMapFactory();
+        Transaction transaction = new Transaction();
+        Map<String, Resource> originalResources = new HashMap<>();
+        Resource resource = new Resource();
+        resource.setKind("any-kind");
+        originalResources.put("k", resource);
+        transaction.setResources(originalResources);
+
+        Map<String, Resource> result = factory.createResourceMap(transaction, "   ", "url");
+
+        assertThat(result).isEqualTo(originalResources);
+    }
+
+    @Test
+    void testCreateResourceMapReturnsEmptyMapWhenTransactionResourcesAreNull() {
+        ResourceMapFactory factory = new ResourceMapFactory();
+        Transaction transaction = new Transaction();
+        transaction.setResources(null);
+
+        Map<String, Resource> result = factory.createResourceMap(transaction, "default", "url");
+
+        assertThat(result).isNotNull().isEmpty();
+    }
+
+    @Test
+    void testCreateResourceMapCustomModeWithNullTransactionResourcesReturnsEmptyMap() {
+        ResourceMapFactory factory = new ResourceMapFactory();
+        Transaction transaction = new Transaction();
+        transaction.setResources(null);
+        Map<String, Resource> result = factory.createResourceMap(transaction, "custom-kind", "url");
+
+        assertThat(result).isNotNull().isEmpty();
+    }
+
+    @Test
+    void testCreateResourceMapSkipsNullResourceAndNullKindEntries() {
+        ResourceMapFactory factory = new ResourceMapFactory();
+        Transaction transaction = new Transaction();
+        Map<String, Resource> originalResources = new HashMap<>();
+        originalResources.put("null-resource", null);
+        Resource nullKindResource = new Resource();
+        originalResources.put("null-kind", nullKindResource);
+        Resource matching = new Resource();
+        matching.setKind("custom-kind");
+        originalResources.put("match", matching);
+
+        transaction.setResources(originalResources);
+
+        Map<String, Resource> result = factory.createResourceMap(transaction, "custom-kind", "url");
+
+        assertThat(result).containsOnlyKeys("match");
+        assertThat(result.get("match").getKind()).isEqualTo("custom-kind");
+    }
 }
 
