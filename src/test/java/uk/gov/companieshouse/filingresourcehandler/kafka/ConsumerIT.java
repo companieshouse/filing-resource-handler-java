@@ -37,6 +37,7 @@ import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getFil
 import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getObjectMapper;
 import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransaction;
 import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionClosedMessage;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getTransactionWithThreeResources;
 
 @SpringBootTest
 class ConsumerIT extends AbstractKafkaIT {
@@ -51,6 +52,14 @@ class ConsumerIT extends AbstractKafkaIT {
     private static final String PSC_VERIFICATION_REGEX = "^/private/transactions/[^/]+/persons-with-significant-control-verification/[^/]+/filings$";
     private static final String ACSP_APPLICATIONS_REGEX = "^/private/transactions/[^/]+/authorised-corporate-service-provider-applications/[^/]+/filings$";
     private static final String ACCOUNTS_REGEX = "^/private/transactions/[^/]+/accounts/[^/]+/filings$";
+    private static final String APPOINTMENT_REGEX = "^/private/transactions/[^/]+/appointment/[^/]+/filings$";
+    private static final String TRANSACTION_URL = "/private/transactions/987654";
+    private static final String TRANSACTION_PATCH_URL = "/private/transactions/987654?force=true";
+    private static final String ANY_MATCH = ".*";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String X_REQUEST_ID = "X-Request-Id";
+    private static final String PRODUCER_KEY = "key";
 
 
     private static Stream<Arguments> filingApiPaths() {
@@ -71,8 +80,7 @@ class ConsumerIT extends AbstractKafkaIT {
     }
 
     @Test
-    void shouldConsumeTransactionClosedMessagesAndProcessSuccessfullyNoPatch(
-    ) throws Exception {
+    void shouldConsumeTransactionClosedMessagesAndProcessSuccessfullyNoPatch() throws Exception {
         // given
         byte[] message = writePayloadToBytes(getTransactionClosedMessage(), transaction_closed.class);
         Transaction transaction = getTransaction();
@@ -83,24 +91,24 @@ class ConsumerIT extends AbstractKafkaIT {
         ObjectMapper objectMapper = getObjectMapper();
 
         String transactionString = objectMapper.writeValueAsString(transaction);
-        stubFor(get("/private/transactions/987654")
+        stubFor(get(TRANSACTION_URL)
                 .willReturn(aResponse()
                         .withStatus(200).withBody(transactionString)));
 
-        stubFor(patch(urlPathEqualTo("/private/transactions/987654"))
+        stubFor(patch(urlPathEqualTo(TRANSACTION_URL))
                 .withQueryParam("force", matching("true"))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
         stubFor(get(urlPathMatching(LIMITED_PARTNERSHIP_REGEX))
-                .withHeader("X-Request-Id", matching(".*"))
+                .withHeader(X_REQUEST_ID, matching(ANY_MATCH))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                         .withBody(objectMapper.writeValueAsString(getFilingApiList()))));
 
         // when
-        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), "key", message));
+        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), PRODUCER_KEY, message));
         if (!testConsumerAspect.getLatch().await(500, TimeUnit.SECONDS)) {
             fail("Timed out waiting for latch");
         }
@@ -110,12 +118,12 @@ class ConsumerIT extends AbstractKafkaIT {
         assertThat(recordsPerTopic(consumerRecords, CONSUMER_RETRY_TOPIC)).isZero();
         assertThat(recordsPerTopic(consumerRecords, CONSUMER_ERROR_TOPIC)).isZero();
         assertThat(recordsPerTopic(consumerRecords, CONSUMER_INVALID_TOPIC)).isZero();
-        WireMock.verify(1, getRequestedFor(urlEqualTo("/private/transactions/987654")));
-        WireMock.verify(0, patchRequestedFor(urlEqualTo("/private/transactions/987654?force=true")));
+        WireMock.verify(1, getRequestedFor(urlEqualTo(TRANSACTION_URL)));
+        WireMock.verify(0, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL)));
         WireMock.verify(1, getRequestedFor(urlPathMatching(LIMITED_PARTNERSHIP_REGEX))
-                .withQueryParam("resource", matching(".*"))
-                .withQueryParam("company_name", matching(".*"))
-                .withQueryParam("company_number", matching(".*")));
+                .withQueryParam("resource", matching(ANY_MATCH))
+                .withQueryParam("company_name", matching(ANY_MATCH))
+                .withQueryParam("company_number", matching(ANY_MATCH)));
     }
 
     @ParameterizedTest
@@ -132,24 +140,24 @@ class ConsumerIT extends AbstractKafkaIT {
         ObjectMapper objectMapper = getObjectMapper();
 
         String transactionString = objectMapper.writeValueAsString(transaction);
-        stubFor(get("/private/transactions/987654")
+        stubFor(get(TRANSACTION_URL)
                 .willReturn(aResponse()
                         .withStatus(200).withBody(transactionString)));
 
-        stubFor(patch(urlPathEqualTo("/private/transactions/987654"))
+        stubFor(patch(urlPathEqualTo(TRANSACTION_URL))
                 .withQueryParam("force", matching("true"))
                 .willReturn(aResponse()
                         .withStatus(204)));
 
         stubFor(get(urlPathMatching(filingRegex))
-                .withHeader("X-Request-Id", matching(".*"))
+                .withHeader(X_REQUEST_ID, matching(ANY_MATCH))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                         .withBody(objectMapper.writeValueAsString(getFilingApiList()))));
 
         // when
-        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), "key", message));
+        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), PRODUCER_KEY, message));
         if (!testConsumerAspect.getLatch().await(500, TimeUnit.SECONDS)) {
             fail("Timed out waiting for latch");
         }
@@ -159,11 +167,103 @@ class ConsumerIT extends AbstractKafkaIT {
         assertThat(recordsPerTopic(consumerRecords, CONSUMER_RETRY_TOPIC)).isZero();
         assertThat(recordsPerTopic(consumerRecords, CONSUMER_ERROR_TOPIC)).isZero();
         assertThat(recordsPerTopic(consumerRecords, CONSUMER_INVALID_TOPIC)).isZero();
-        WireMock.verify(1, getRequestedFor(urlEqualTo("/private/transactions/987654")));
-        WireMock.verify(1, patchRequestedFor(urlEqualTo("/private/transactions/987654?force=true")));
+        WireMock.verify(1, getRequestedFor(urlEqualTo(TRANSACTION_URL)));
+        WireMock.verify(1, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL)));
         WireMock.verify(1, getRequestedFor(urlPathMatching(filingRegex))
-                .withQueryParam("resource", matching(".*"))
-                .withQueryParam("company_name", matching(".*"))
-                .withQueryParam("company_number", matching(".*")));
+                .withQueryParam("resource", matching(ANY_MATCH))
+                .withQueryParam("company_name", matching(ANY_MATCH))
+                .withQueryParam("company_number", matching(ANY_MATCH)));
+    }
+
+    @Test
+    void shouldConsumeTransactionClosedMessagesAndProcessSuccessfullyWithThreeResources() throws Exception {
+        // given — transaction with 3 appointment resources
+        byte[] message = writePayloadToBytes(getTransactionClosedMessage(), transaction_closed.class);
+        Transaction transaction = getTransactionWithThreeResources();
+        ObjectMapper objectMapper = getObjectMapper();
+        String transactionString = objectMapper.writeValueAsString(transaction);
+
+        stubFor(get(TRANSACTION_URL)
+                .willReturn(aResponse()
+                        .withStatus(200).withBody(transactionString)));
+
+        stubFor(patch(urlPathEqualTo(TRANSACTION_URL))
+                .withQueryParam("force", matching("true"))
+                .willReturn(aResponse()
+                        .withStatus(204)));
+
+        stubFor(get(urlPathMatching(APPOINTMENT_REGEX))
+                .withHeader(X_REQUEST_ID, matching(ANY_MATCH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .withBody(objectMapper.writeValueAsString(getFilingApiList()))));
+
+        // when
+        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), PRODUCER_KEY, message));
+        if (!testConsumerAspect.getLatch().await(500, TimeUnit.SECONDS)) {
+            fail("Timed out waiting for latch");
+        }
+
+        // then — main topic consumed, no retry/error/invalid, filings API called 3 times, patch called once
+        ConsumerRecords<?, ?> consumerRecords = KafkaTestUtils.getRecords(testConsumer, Duration.ofMillis(10000L), 1);
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_MAIN_TOPIC)).isOne();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_RETRY_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_ERROR_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_INVALID_TOPIC)).isZero();
+        WireMock.verify(1, getRequestedFor(urlEqualTo(TRANSACTION_URL)));
+        WireMock.verify(3, getRequestedFor(urlPathMatching(APPOINTMENT_REGEX)));
+        WireMock.verify(1, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL)));
+    }
+
+    @Test
+    void shouldConsumeTransactionClosedMessagesAndProcessSuccessfullyWhenFilingsAreNull() throws Exception {
+        // given
+        byte[] message = writePayloadToBytes(getTransactionClosedMessage(), transaction_closed.class);
+        Transaction transaction = getTransaction();
+        transaction.setFilings(null);
+
+        Map<String, String> resourceLinks = transaction.getResources().get(TEST_TRANSACTIONS_KEY).getLinks();
+        resourceLinks.put("resource", TEST_TRANSACTIONS_KEY);
+        transaction.getResources().get(TEST_TRANSACTIONS_KEY).setLinks(resourceLinks);
+
+        ObjectMapper objectMapper = getObjectMapper();
+        String transactionString = objectMapper.writeValueAsString(transaction);
+
+        stubFor(get(TRANSACTION_URL)
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody(transactionString)));
+
+        stubFor(patch(urlPathEqualTo(TRANSACTION_URL))
+                .withQueryParam("force", matching("true"))
+                .willReturn(aResponse().withStatus(204)));
+
+        stubFor(get(urlPathMatching(LIMITED_PARTNERSHIP_REGEX))
+                .withHeader(X_REQUEST_ID, matching(ANY_MATCH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .withBody(objectMapper.writeValueAsString(getFilingApiList()))));
+
+        // when
+        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), PRODUCER_KEY, message));
+        if (!testConsumerAspect.getLatch().await(500, TimeUnit.SECONDS)) {
+            fail("Timed out waiting for latch");
+        }
+
+        // then
+        ConsumerRecords<?, ?> consumerRecords = KafkaTestUtils.getRecords(testConsumer, Duration.ofMillis(10000L), 1);
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_MAIN_TOPIC)).isOne();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_RETRY_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_ERROR_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_INVALID_TOPIC)).isZero();
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo(TRANSACTION_URL)));
+        WireMock.verify(1, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL)));
+        WireMock.verify(1, getRequestedFor(urlPathMatching(LIMITED_PARTNERSHIP_REGEX))
+                .withQueryParam("resource", matching(ANY_MATCH))
+                .withQueryParam("company_name", matching(ANY_MATCH))
+                .withQueryParam("company_number", matching(ANY_MATCH)));
     }
 }
