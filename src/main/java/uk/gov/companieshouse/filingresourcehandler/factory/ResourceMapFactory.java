@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.filingresourcehandler.factory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.model.transaction.Resource;
 import uk.gov.companieshouse.api.model.transaction.Transaction;
@@ -22,9 +23,7 @@ public class ResourceMapFactory {
                                                    String transactionUrl) {
         Map<String, Resource> resources = transaction.getResources();
 
-        boolean isCustomMode = transactionFilingMode != null
-                && !transactionFilingMode.isBlank()
-                && !DEFAULT.equals(transactionFilingMode);
+        boolean isCustomMode = StringUtils.isNotBlank(transactionFilingMode) && !DEFAULT.equals(transactionFilingMode);
 
         if (!isCustomMode || resources == null) {
             return resources != null ? resources : new HashMap<>();

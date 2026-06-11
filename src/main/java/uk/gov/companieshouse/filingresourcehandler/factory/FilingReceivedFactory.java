@@ -2,6 +2,7 @@ package uk.gov.companieshouse.filingresourcehandler.factory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.model.transaction.SubmittedBy;
@@ -60,7 +61,7 @@ public class FilingReceivedFactory {
         String companyName = transaction.getCompanyName();
         String companyNumber = transaction.getCompanyNumber();
 
-        if (isBlank(companyName) || isBlank(companyNumber)) {
+        if (StringUtils.isBlank(companyName) || StringUtils.isBlank(companyNumber)) {
             if (items.getFirst().getData() == null) {
                 String errorMessage = "Items list  has no data for transaction id %s".formatted(transactionId);
                 RetryErrorHandler.logAndThrowRetryableException(errorMessage);
@@ -113,9 +114,5 @@ public class FilingReceivedFactory {
                 closedBy.get(FIELD_LANGUAGE),
                 closedBy.get(FIELD_SURNAME),
                 closedBy.get(FIELD_ID));
-    }
-
-    private static boolean isBlank(String s) {
-        return s == null || s.isBlank();
     }
 }

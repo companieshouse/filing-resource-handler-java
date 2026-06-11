@@ -38,6 +38,14 @@
     </properties>
     <dependencyManagement>
         <dependencies>
+            <!-- CVE-2026-41841 - resolves spring 7.0.7 issues-->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>7.0.8</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>

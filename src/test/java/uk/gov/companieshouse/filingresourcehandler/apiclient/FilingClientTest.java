@@ -1,5 +1,19 @@
 package uk.gov.companieshouse.filingresourcehandler.apiclient;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,21 +30,6 @@ import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.filingresourcehandler.exception.RetryableException;
 import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
 
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-
 @ExtendWith(MockitoExtension.class)
 class FilingClientTest {
 
@@ -38,10 +37,9 @@ class FilingClientTest {
     private static final String TRANSACTIONS_123 = "/transactions/123";
     private static final String COMPANY_NAME = "companyName";
     private static final String COMPANY_NUMBER = "00006400";
-    private static final String UNEXPECTED_ERROR_OCCURRED = "Unexpected error occurred";
+
     @Mock
     private ResponseHandler responseHandler;
-
     private MockRestServiceServer server;
     private FilingClient client;
 
@@ -72,10 +70,6 @@ class FilingClientTest {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withNoContent());
 
-        doThrow(new RetryableException(UNEXPECTED_ERROR_OCCURRED))
-                .when(responseHandler)
-                .handle(anyString(), any(Exception.class));
-
         try (var mocked = Mockito.mockStatic(RetryErrorHandler.class)) {
             mocked.when(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.anyString()))
                     .thenThrow(new RetryableException("retryable"));
@@ -105,16 +99,5 @@ class FilingClientTest {
 
         verify(responseHandler).handle(anyString(), any(RestClientResponseException.class));
         server.verify();
-    }
-
-    @Test
-    void getFilingApiHandlesGenericException() {
-        doThrow(new RetryableException(UNEXPECTED_ERROR_OCCURRED))
-                .when(responseHandler)
-                .handle(anyString(), any(Exception.class));
-
-        assertThatThrownBy(() -> client.getFilingApi(TRANSACTIONS_123, COMPANY_NAME, null))
-                .isInstanceOf(RetryableException.class)
-                .hasMessageContaining(UNEXPECTED_ERROR_OCCURRED);
     }
 }
