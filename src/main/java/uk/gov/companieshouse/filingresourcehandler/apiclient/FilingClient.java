@@ -1,5 +1,9 @@
 package uk.gov.companieshouse.filingresourcehandler.apiclient;
 
+import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
+
+import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -12,12 +16,9 @@ import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
-import java.util.Optional;
-
-import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
-
 @Component
 public class FilingClient {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
     private static final String GET_RESOURCE_DATA_URI = "/private%s/filings";
     private final ResponseHandler responseHandler;
@@ -31,12 +32,11 @@ public class FilingClient {
 
 
     public Optional<FilingApi[]> getFilingApi(String link, String companyName, String companyNumber) {
-        FilingApi[] response;
         String requestUri = GET_RESOURCE_DATA_URI.formatted(link);
         String requestId = DataMapHolder.getRequestId();
+        MultiValueMap<String, String> queryParams = getQueryParams(link, companyName, companyNumber);
         try {
-            MultiValueMap<String, String> queryParams = getQueryParams(link, companyName, companyNumber);
-            response = restClient.get()
+            FilingApi[] response = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path(requestUri).queryParams(queryParams).build())
                     .headers(headers -> {
                         if (requestId != null && !requestId.trim().isEmpty()) {
@@ -47,19 +47,16 @@ public class FilingClient {
                     .body(new ParameterizedTypeReference<>() {
                     });
             if (response == null) {
-                String errorMessage = "Failed to execute GET getFilingApi with requestUri: %s with null Response".formatted(requestUri);
+                String errorMessage = "Failed to execute GET getFilingApi with requestUri: %s with null Response".formatted(
+                        requestUri);
                 RetryErrorHandler.logAndThrowRetryableException(errorMessage);
             }
             LOGGER.info("Successfully executed GET Filings", DataMapHolder.getLogMap());
             return Optional.of(response);
-
         } catch (RestClientResponseException ex) {
-            String restClientExceptionMessage = "Failed to execute GET getFilingApi with requestUri: %s with status code: %s and stacktrace %s".formatted(requestUri, ex.getStatusCode(), ex.getStackTrace());
+            String restClientExceptionMessage = "Failed to execute GET getFilingApi with requestUri: %s with status code: %s and stacktrace %s".formatted(
+                    requestUri, ex.getStatusCode(), ex.getStackTrace());
             responseHandler.handle(restClientExceptionMessage, ex);
-        } catch (Exception ex) {
-            String defaultErrorMessage = "Unexpected error occurred during GET getFilingApi with requestUri: %s with message: %s and stacktrace %s".formatted(requestUri, ex.getMessage(), ex.getStackTrace());
-            LOGGER.error(defaultErrorMessage, DataMapHolder.getLogMap());
-            responseHandler.handle(defaultErrorMessage, ex);
         }
         return Optional.empty();
     }
@@ -68,8 +65,9 @@ public class FilingClient {
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
         queryParams.add("resource", link);
         queryParams.add("company_name", companyName);
-        if (!companyNumber.isBlank())
+        if (StringUtils.isNotBlank(companyNumber)) {
             queryParams.add("company_number", companyNumber);
+        }
         return queryParams;
     }
 }

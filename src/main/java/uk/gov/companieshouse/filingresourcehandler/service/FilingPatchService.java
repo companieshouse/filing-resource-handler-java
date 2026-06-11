@@ -1,5 +1,11 @@
 package uk.gov.companieshouse.filingresourcehandler.service;
 
+import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Filing;
@@ -9,14 +15,9 @@ import uk.gov.companieshouse.filingresourcehandler.logging.DataMapHolder;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
-
 @Service
 public class FilingPatchService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
 
     private static final String INSOLVENCY = "insolvency";
@@ -30,15 +31,17 @@ public class FilingPatchService {
     }
 
 
-    public void addFilingToPatch(Map<String, Filing> transactionsFilingMap, FilingApi filing, String submissionId, String link, String companyNumber) {
+    public void addFilingToPatch(Map<String, Filing> transactionsFilingMap, FilingApi filing, String submissionId, String link,
+            String companyNumber) {
         String filingKind = filing.getKind() != null ? filing.getKind() : "";
         if (filingKind != null && filingKind.toLowerCase().contains(INSOLVENCY)) {
             companyNumber = Optional.ofNullable(filing.getData())
                     .map(data -> data.get(COMPANY_NUMBER))
                     .map(Object::toString)
-                    .filter(value -> !value.isBlank())
+                    .filter(StringUtils::isNotBlank)
                     .orElseThrow(() -> {
-                        String message = "Missing company_number or filing data for insolvency filing with submissionId : %s".formatted(submissionId);
+                        String message = "Missing company_number or filing data for insolvency filing with submissionId : %s".formatted(
+                                submissionId);
                         LOGGER.error(message, DataMapHolder.getLogMap());
                         return new NonRetryableException(message);
                     });
