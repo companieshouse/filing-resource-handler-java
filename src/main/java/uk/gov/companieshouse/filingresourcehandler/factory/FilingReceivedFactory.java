@@ -1,7 +1,13 @@
 package uk.gov.companieshouse.filingresourcehandler.factory;
 
+import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,13 +21,6 @@ import uk.gov.companieshouse.filingresourcehandler.logging.DataMapHolder;
 import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 
 @Component
 public class FilingReceivedFactory {
@@ -42,13 +41,13 @@ public class FilingReceivedFactory {
     private final ObjectMapper objectMapper;
 
     public FilingReceivedFactory(@Value("${oauth2.client.id}") String oauthClientId,
-                                 ObjectMapper objectMapper) {
+            ObjectMapper objectMapper) {
         this.oauthClientId = oauthClientId;
         this.objectMapper = objectMapper;
     }
 
     public FilingReceived getFilingReceived(List<uk.gov.companieshouse.filing.received.Transaction> items,
-                                            Transaction transaction) {
+            Transaction transaction) {
         if (transaction == null) {
             //Added to counter SonarQube issue as SonarQube was unable to detect logAndThrowRetryableException
             String message = "Transaction is null in getFilingReceived";
@@ -67,7 +66,6 @@ public class FilingReceivedFactory {
 
         if (StringUtils.isBlank(companyNumber)) {
             companyNumber = handleEmptyField(FIELD_COMPANY_NUMBER, items, transactionId);
-
         }
 
         String applicationId = Optional.ofNullable(transaction.getSubmittedBy())
@@ -102,7 +100,8 @@ public class FilingReceivedFactory {
                 closedBy.get(FIELD_ID));
     }
 
-    private String handleEmptyField(String fieldKey, List<uk.gov.companieshouse.filing.received.Transaction> items, String transactionId) {
+    private String handleEmptyField(String fieldKey, List<uk.gov.companieshouse.filing.received.Transaction> items,
+            String transactionId) {
         String fieldValue = "";
         if (items.getFirst().getData() == null) {
             String errorMessage = "Items list has no data for transaction id %s".formatted(transactionId);
@@ -121,7 +120,7 @@ public class FilingReceivedFactory {
         Map<String, Object> filingData = Optional.ofNullable(tempFiling).orElse(Map.of());
         Object fieldObject = filingData.get(fieldKey);
         if (fieldObject != null) {
-            fieldValue  = fieldObject.toString();
+            fieldValue = fieldObject.toString();
         }
         return fieldValue;
     }

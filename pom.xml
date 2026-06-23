@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>filing-resource-handler-java</artifactId>
     <version>unversioned</version>
@@ -11,90 +10,117 @@
         <relativePath/>
     </parent>
     <properties>
-        <kafka-models.version>3.0.33</kafka-models.version>
-        <private-api-sdk-java.version>6.0.17</private-api-sdk-java.version>
-        <structured-logging.version>3.0.57</structured-logging.version>
-        <aspectjweaver-version>1.9.25.1</aspectjweaver-version>
-        <avro-version>1.12.1</avro-version>
-        <commons-lang3-version>3.20.0</commons-lang3-version>
-        <kafka-clients-version>3.9.1</kafka-clients-version>
-        <log4j-api.version>2.25.3</log4j-api.version>
-        <spring.boot.version>4.0.6</spring.boot.version>
-        <wiremock.version>3.13.2</wiremock.version>
-        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+        <!--Build-->
         <java.version>21</java.version>
-        <jib-maven-plugin.version>3.5.1</jib-maven-plugin.version>
-        <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
-        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
-        <log4j-api.version>2.25.3</log4j-api.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <assertj-core.version>3.27.7</assertj-core.version>
-        <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
+        <!--Companies House-->
+        <ch-dependency-bom.version>0.1.9</ch-dependency-bom.version>
+        <ch-test-bom.version>0.1.9</ch-test-bom.version>
+        <private-api-sdk-java.version>6.0.17</private-api-sdk-java.version>
+        <!--External-->
+        <opentelemetry-api.version>1.62.0</opentelemetry-api.version>
+        <spring-framework-bom.version>7.0.8</spring-framework-bom.version>
+        <spring.boot.version>4.0.6</spring.boot.version>
         <testcontainers-bom.version>1.21.4</testcontainers-bom.version>
+        <tomcat-embed-core.version>11.0.22</tomcat-embed-core.version>
+        <tomcat-embed-el.version>11.0.22</tomcat-embed-el.version>
+        <tomcat-embed-websocket.version>11.0.22</tomcat-embed-websocket.version>
+        <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
+        <!--Plugin-->
+        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+        <jib-maven-plugin.version>3.5.1</jib-maven-plugin.version>
+        <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
+        <maven-dependency-plugin.version>3.10.0</maven-dependency-plugin.version>
+        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
     </properties>
     <dependencyManagement>
         <dependencies>
-            <!-- CVE-2026-41841 - resolves spring 7.0.7 issues-->
+            <!--Companies House-->
+            <dependency>
+                <groupId>uk.gov.companieshouse</groupId>
+                <artifactId>ch-dependency-bom</artifactId>
+                <version>${ch-dependency-bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.companieshouse</groupId>
+                <artifactId>ch-test-bom</artifactId>
+                <version>${ch-test-bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <!--External-->
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
-                <version>7.0.8</version>
-                <type>pom</type>
+                <version>${spring-framework-bom.version}</version>
                 <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring.boot.version}</version>
-                <type>pom</type>
                 <scope>import</scope>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-bom</artifactId>
                 <version>${testcontainers-bom.version}</version>
-                <type>pom</type>
                 <scope>import</scope>
+                <type>pom</type>
             </dependency>
-            <!-- start fix versions for vulnerable transitive dependencies -->
-            <!-- CVE-2026-45292  -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-api</artifactId>
-                <version>1.62.0</version>
+                <version>${opentelemetry-api.version}</version>
                 <scope>compile</scope>
             </dependency>
-            <!--CVE-2026-41284, CVE-2026-43514-->
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>11.0.22</version>
+                <version>${tomcat-embed-core.version}</version>
             </dependency>
-            <!-- CVE-CVE-2026-42498 -->
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-el</artifactId>
-                <version>11.0.22</version>
+                <version>${tomcat-embed-el.version}</version>
             </dependency>
-            <!--CVE-2026-41284-->
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-websocket</artifactId>
-                <version>11.0.22</version>
+                <version>${tomcat-embed-websocket.version}</version>
             </dependency>
-            <!-- end fix versions for vulnerable transitive dependencies -->
         </dependencies>
     </dependencyManagement>
     <dependencies>
-        <!-- external -->
+        <!--Companies House-->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-kafka</artifactId>
+            <groupId>uk.gov.companieshouse</groupId>
+            <artifactId>kafka-models</artifactId>
         </dependency>
+        <dependency>
+            <groupId>uk.gov.companieshouse</groupId>
+            <artifactId>private-api-sdk-java</artifactId>
+            <version>${private-api-sdk-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>uk.gov.companieshouse</groupId>
+            <artifactId>structured-logging</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--External-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -102,6 +128,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aspectj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -115,41 +145,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <!-- companies house -->
-        <dependency>
-            <groupId>uk.gov.companieshouse</groupId>
-            <artifactId>kafka-models</artifactId>
-            <version>${kafka-models.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>uk.gov.companieshouse</groupId>
-            <artifactId>private-api-sdk-java</artifactId>
-            <version>${private-api-sdk-java.version}</version>
-            <exclusions>
-                <!-- not required, use logback instead -->
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>uk.gov.companieshouse</groupId>
-            <artifactId>structured-logging</artifactId>
-            <version>${structured-logging.version}</version>
-            <exclusions>
-                <!-- not required, use logback instead -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- test -->
+        <!--Test-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <artifactId>spring-boot-starter-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -159,12 +158,12 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-kafka-test</artifactId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers-kafka</artifactId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -173,19 +172,24 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-kafka</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
             <version>${wiremock-standalone.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

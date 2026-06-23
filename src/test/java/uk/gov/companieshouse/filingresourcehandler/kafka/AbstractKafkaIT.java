@@ -1,8 +1,12 @@
 package uk.gov.companieshouse.filingresourcehandler.kafka;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.common.collect.Iterables;
+import java.io.ByteArrayOutputStream;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -19,21 +23,13 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
-import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.ConfluentKafkaContainer;
 import uk.gov.companieshouse.filingresourcehandler.serdes.TransactionClosedDeserialiser;
-
-import java.io.ByteArrayOutputStream;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Testcontainers
 @WireMockTest(httpPort = 8889)
@@ -57,13 +53,10 @@ abstract class AbstractKafkaIT {
     }
 
     @BeforeEach
-    protected void setup(@Autowired KafkaListenerEndpointRegistry registry) {
-        registry.getAllListenerContainers() // Ensure all listener containers are assigned to partitions before tests run
-                .forEach(container -> ContainerTestUtils.waitForAssignment(container, 1));
+    protected void setup() {
         testConsumerAspect.resetLatch();
         testConsumer.subscribe(getSubscribedTopics());
         testConsumer.poll(Duration.ofMillis(1000));
-        WireMock.reset();
     }
 
     protected List<String> getSubscribedTopics() {
