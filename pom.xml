@@ -22,7 +22,6 @@
         <ch-test-bom.version>0.1.9</ch-test-bom.version>
         <private-api-sdk-java.version>6.0.17</private-api-sdk-java.version>
         <!--External-->
-        <opentelemetry-api.version>1.62.0</opentelemetry-api.version>
         <spring-framework-bom.version>7.0.8</spring-framework-bom.version>
         <spring.boot.version>4.0.6</spring.boot.version>
         <testcontainers-bom.version>1.21.4</testcontainers-bom.version>
@@ -75,12 +74,6 @@
                 <version>${testcontainers-bom.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-api</artifactId>
-                <version>${opentelemetry-api.version}</version>
-                <scope>compile</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

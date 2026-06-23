@@ -100,7 +100,7 @@ class FilingReceivedFactoryTest {
 
         FilingReceived filingReceived = factory.getFilingReceived(items, transaction);
 
-        assertEquals("", filingReceived.getSubmission().getCompanyNumber());
+        assertThat(filingReceived.getSubmission().getCompanyNumber()).isEmpty();
         assertThat(filingReceived.getSubmission().getCompanyName()).isEqualTo("Test Company");
     }
 

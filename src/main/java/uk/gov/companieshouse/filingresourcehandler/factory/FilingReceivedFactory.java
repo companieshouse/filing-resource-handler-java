@@ -40,8 +40,7 @@ public class FilingReceivedFactory {
     private final String oauthClientId;
     private final ObjectMapper objectMapper;
 
-    public FilingReceivedFactory(@Value("${oauth2.client.id}") String oauthClientId,
-            ObjectMapper objectMapper) {
+    public FilingReceivedFactory(@Value("${oauth2.client.id}") String oauthClientId, ObjectMapper objectMapper) {
         this.oauthClientId = oauthClientId;
         this.objectMapper = objectMapper;
     }
