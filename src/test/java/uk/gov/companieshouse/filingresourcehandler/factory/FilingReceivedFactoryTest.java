@@ -16,6 +16,7 @@ import uk.gov.companieshouse.filingresourcehandler.utils.TestUtils;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -82,6 +83,25 @@ class FilingReceivedFactoryTest {
             assertThrows(RuntimeException.class, () -> factory.getFilingReceived(items, transaction));
             mocked.verify(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.contains("txn-id")));
         }
+    }
+
+    @Test
+    void getFilingReceivedAllowsNullCompanyNumberWhenJsonHasNoCompanyNumberKey() {
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory("oauth-client-id");
+
+        uk.gov.companieshouse.filing.received.Transaction item =
+                new uk.gov.companieshouse.filing.received.Transaction();
+        item.setData("{}");
+        List<uk.gov.companieshouse.filing.received.Transaction> items = List.of(item);
+
+        Transaction transaction = TestUtils.getTransactionForFilingReceived();
+        transaction.setCompanyNumber(null);
+        transaction.setCompanyName("Test Company");
+
+        FilingReceived filingReceived = factory.getFilingReceived(items, transaction);
+
+        assertEquals("", filingReceived.getSubmission().getCompanyNumber());
+        assertThat(filingReceived.getSubmission().getCompanyName()).isEqualTo("Test Company");
     }
 
     @Test

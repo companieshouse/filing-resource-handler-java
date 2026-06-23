@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.filingresourcehandler.kafka;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.common.collect.Iterables;
 import org.apache.avro.io.DatumWriter;
@@ -18,7 +19,9 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
+import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -54,10 +57,13 @@ abstract class AbstractKafkaIT {
     }
 
     @BeforeEach
-    protected void setup() {
+    protected void setup(@Autowired KafkaListenerEndpointRegistry registry) {
+        registry.getAllListenerContainers() // Ensure all listener containers are assigned to partitions before tests run
+                .forEach(container -> ContainerTestUtils.waitForAssignment(container, 1));
         testConsumerAspect.resetLatch();
         testConsumer.subscribe(getSubscribedTopics());
         testConsumer.poll(Duration.ofMillis(1000));
+        WireMock.reset();
     }
 
     protected List<String> getSubscribedTopics() {

@@ -61,27 +61,13 @@ public class FilingReceivedFactory {
         String companyName = transaction.getCompanyName();
         String companyNumber = transaction.getCompanyNumber();
 
-        if (StringUtils.isBlank(companyName) || StringUtils.isBlank(companyNumber)) {
-            if (items.getFirst().getData() == null) {
-                String errorMessage = "Items list  has no data for transaction id %s".formatted(transactionId);
-                RetryErrorHandler.logAndThrowRetryableException(errorMessage);
-            }
-            Map<String, Object> tempFiling = Map.of();
-            try {
-                tempFiling = objectMapper.readValue(
-                        items.getFirst().getData(),
-                        new TypeReference<>() {
-                        });
-            } catch (Exception err) {
-                String errorMessage = "Unable to parse json for transaction id %s".formatted(transactionId);
-                RetryErrorHandler.logAndThrowRetryableException(errorMessage);
-            }
-            Map<String, Object> filingData = Optional.ofNullable(tempFiling).orElse(Map.of());
-            Object companyNumberObject = filingData.get(FIELD_COMPANY_NUMBER);
-            if (companyNumberObject != null) companyNumber = companyNumberObject.toString();
+        if (StringUtils.isBlank(companyName)) {
+            companyName = handleEmptyField(FIELD_COMPANY_NAME, items, transactionId);
+        }
 
-            Object companyNameObject = filingData.get(FIELD_COMPANY_NAME);
-            if (companyNameObject != null) companyName = companyNameObject.toString();
+        if (StringUtils.isBlank(companyNumber)) {
+            companyNumber = handleEmptyField(FIELD_COMPANY_NUMBER, items, transactionId);
+
         }
 
         String applicationId = Optional.ofNullable(transaction.getSubmittedBy())
@@ -114,5 +100,29 @@ public class FilingReceivedFactory {
                 closedBy.get(FIELD_LANGUAGE),
                 closedBy.get(FIELD_SURNAME),
                 closedBy.get(FIELD_ID));
+    }
+
+    private String handleEmptyField(String fieldKey, List<uk.gov.companieshouse.filing.received.Transaction> items, String transactionId) {
+        String fieldValue = "";
+        if (items.getFirst().getData() == null) {
+            String errorMessage = "Items list has no data for transaction id %s".formatted(transactionId);
+            RetryErrorHandler.logAndThrowRetryableException(errorMessage);
+        }
+        Map<String, Object> tempFiling = Map.of();
+        try {
+            tempFiling = objectMapper.readValue(
+                    items.getFirst().getData(),
+                    new TypeReference<>() {
+                    });
+        } catch (Exception err) {
+            String errorMessage = "Unable to parse json for transaction id %s".formatted(transactionId);
+            RetryErrorHandler.logAndThrowRetryableException(errorMessage);
+        }
+        Map<String, Object> filingData = Optional.ofNullable(tempFiling).orElse(Map.of());
+        Object fieldObject = filingData.get(fieldKey);
+        if (fieldObject != null) {
+            fieldValue  = fieldObject.toString();
+        }
+        return fieldValue;
     }
 }
