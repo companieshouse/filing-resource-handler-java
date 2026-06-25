@@ -75,8 +75,9 @@ public class FilingReceivedFactory {
                 ? CHANNEL_CHS
                 : CHANNEL_API_FILING;
 
+        String closedAt = StringUtils.isBlank(transaction.getClosedAt()) ? "" : transaction.getClosedAt();
         SubmissionRecord submissionRecord = new SubmissionRecord(
-                companyNumber, companyName, transaction.getClosedAt(), transactionId);
+                companyNumber, companyName, closedAt, transactionId);
 
         return new FilingReceived(
                 applicationId,
@@ -93,10 +94,10 @@ public class FilingReceivedFactory {
                 : Map.of();
 
         return new PresenterRecord(
-                closedBy.get(FIELD_FORENAME),
-                closedBy.get(FIELD_LANGUAGE),
-                closedBy.get(FIELD_SURNAME),
-                closedBy.get(FIELD_ID));
+                closedBy.getOrDefault(FIELD_FORENAME, ""),
+                closedBy.getOrDefault(FIELD_LANGUAGE, ""),
+                closedBy.getOrDefault(FIELD_SURNAME, ""),
+                closedBy.getOrDefault(FIELD_ID, ""));
     }
 
     private String handleEmptyField(String fieldKey, List<uk.gov.companieshouse.filing.received.Transaction> items,
