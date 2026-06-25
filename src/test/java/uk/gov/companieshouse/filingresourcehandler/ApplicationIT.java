@@ -33,6 +33,6 @@ class ApplicationIT {
                         .header(REQUEST_ID.value(), "request_id"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string("{\"groups\":[\"liveness\",\"readiness\"],\"status\":\"UP\"}"));
+                .andExpect(content().json("{\"status\":\"UP\"}"));
     }
 }

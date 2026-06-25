@@ -1,6 +1,12 @@
 package uk.gov.companieshouse.filingresourcehandler.factory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -12,13 +18,6 @@ import uk.gov.companieshouse.filing.received.PresenterRecord;
 import uk.gov.companieshouse.filing.received.SubmissionRecord;
 import uk.gov.companieshouse.filingresourcehandler.util.RetryErrorHandler;
 import uk.gov.companieshouse.filingresourcehandler.utils.TestUtils;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FilingReceivedFactoryTest {
@@ -82,6 +81,25 @@ class FilingReceivedFactoryTest {
             assertThrows(RuntimeException.class, () -> factory.getFilingReceived(items, transaction));
             mocked.verify(() -> RetryErrorHandler.logAndThrowRetryableException(Mockito.contains("txn-id")));
         }
+    }
+
+    @Test
+    void getFilingReceivedAllowsNullCompanyNumberWhenJsonHasNoCompanyNumberKey() {
+        FilingReceivedFactory factory = TestUtils.getFilingReceivedFactory("oauth-client-id");
+
+        uk.gov.companieshouse.filing.received.Transaction item =
+                new uk.gov.companieshouse.filing.received.Transaction();
+        item.setData("{}");
+        List<uk.gov.companieshouse.filing.received.Transaction> items = List.of(item);
+
+        Transaction transaction = TestUtils.getTransactionForFilingReceived();
+        transaction.setCompanyNumber(null);
+        transaction.setCompanyName("Test Company");
+
+        FilingReceived filingReceived = factory.getFilingReceived(items, transaction);
+
+        assertThat(filingReceived.getSubmission().getCompanyNumber()).isEmpty();
+        assertThat(filingReceived.getSubmission().getCompanyName()).isEqualTo("Test Company");
     }
 
     @Test
