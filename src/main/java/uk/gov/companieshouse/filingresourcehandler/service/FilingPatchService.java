@@ -47,7 +47,9 @@ public class FilingPatchService {
                     });
         }
         Map<String, String> links = new HashMap<>();
-        links.put(RESOURCE, link != null ? link : "");
+        if (StringUtils.isNotBlank(link)) {
+            links.put(RESOURCE, link);
+        }
         Filing patchFiling = filingFactory.getFiling(filing, companyNumber, links);
         transactionsFilingMap.put(submissionId, patchFiling);
     }

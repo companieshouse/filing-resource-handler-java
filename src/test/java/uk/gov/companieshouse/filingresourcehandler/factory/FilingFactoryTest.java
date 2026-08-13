@@ -64,13 +64,86 @@ class FilingFactoryTest {
     }
 
     @Test
-    void testGetFilingDefaultsCostToEmptyStringWhenNull() {
+    void testGetFilingDoesNotSetCostWhenNull() {
         FilingFactory factory = TestUtils.getFilingFactory();
         FilingApi filingApi = TestUtils.getFilingApi();
         filingApi.setCost(null);
 
         Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
 
-        assertThat(filing.getCost()).isEmpty();
+        assertThat(filing.getCost()).isNull();
+    }
+
+    @Test
+    void testGetFilingDoesNotSetCostWhenEmpty() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+        filingApi.setCost("");
+
+        Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
+
+        assertThat(filing.getCost()).isNull();
+    }
+
+    @Test
+    void testGetFilingDoesNotSetCostWhenBlank() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+        filingApi.setCost("   ");
+
+        Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
+
+        assertThat(filing.getCost()).isNull();
+    }
+
+    @Test
+    void testGetFilingSetsCostWhenProvided() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+        filingApi.setCost("10.00");
+
+        Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
+
+        assertThat(filing.getCost()).isEqualTo("10.00");
+    }
+
+    @Test
+    void testGetFilingDoesNotSetCompanyNumberWhenNull() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+
+        Filing filing = factory.getFiling(filingApi, null, TestUtils.getLinks());
+
+        assertThat(filing.getCompanyNumber()).isNull();
+    }
+
+    @Test
+    void testGetFilingDoesNotSetCompanyNumberWhenEmpty() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+
+        Filing filing = factory.getFiling(filingApi, "", TestUtils.getLinks());
+
+        assertThat(filing.getCompanyNumber()).isNull();
+    }
+
+    @Test
+    void testGetFilingDoesNotSetCompanyNumberWhenBlank() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+
+        Filing filing = factory.getFiling(filingApi, "   ", TestUtils.getLinks());
+
+        assertThat(filing.getCompanyNumber()).isNull();
+    }
+
+    @Test
+    void testGetFilingDoesNotSetCompanyNumberWhenTrimmedToEmpty() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+
+        Filing filing = factory.getFiling(filingApi, "  \t  ", TestUtils.getLinks());
+
+        assertThat(filing.getCompanyNumber()).isNull();
     }
 }

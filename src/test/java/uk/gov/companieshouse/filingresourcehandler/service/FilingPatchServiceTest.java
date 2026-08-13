@@ -127,6 +127,51 @@ class FilingPatchServiceTest {
 
 
     @Test
+    void addFilingToPatchPassesEmptyLinksMapWhenLinkIsNull() {
+        when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
+
+        ArgumentCaptor<Map<String, String>> linksCaptor = ArgumentCaptor.captor();
+        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi(), SUBMISSION_ID, null, ORIGINAL_COMPANY_NUMBER);
+
+        verify(filingFactory).getFiling(any(), any(), linksCaptor.capture());
+        Assertions.assertTrue(linksCaptor.getValue().isEmpty());
+    }
+
+    @Test
+    void addFilingToPatchPassesEmptyLinksMapWhenLinkIsEmpty() {
+        when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
+
+        ArgumentCaptor<Map<String, String>> linksCaptor = ArgumentCaptor.captor();
+        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi(), SUBMISSION_ID, "", ORIGINAL_COMPANY_NUMBER);
+
+        verify(filingFactory).getFiling(any(), any(), linksCaptor.capture());
+        Assertions.assertTrue(linksCaptor.getValue().isEmpty());
+    }
+
+    @Test
+    void addFilingToPatchPassesEmptyLinksMapWhenLinkIsBlank() {
+        when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
+
+        ArgumentCaptor<Map<String, String>> linksCaptor = ArgumentCaptor.captor();
+        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi(), SUBMISSION_ID, "   ", ORIGINAL_COMPANY_NUMBER);
+
+        verify(filingFactory).getFiling(any(), any(), linksCaptor.capture());
+        Assertions.assertTrue(linksCaptor.getValue().isEmpty());
+    }
+
+    @Test
+    void addFilingToPatchPassesResourceLinkInLinksMapWhenLinkIsProvided() {
+        when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
+
+        ArgumentCaptor<Map<String, String>> linksCaptor = ArgumentCaptor.captor();
+        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi(), SUBMISSION_ID, RESOURCE_LINK, ORIGINAL_COMPANY_NUMBER);
+
+        verify(filingFactory).getFiling(any(), any(), linksCaptor.capture());
+        Assertions.assertEquals(RESOURCE_LINK, linksCaptor.getValue().get("resource"));
+        Assertions.assertEquals(1, linksCaptor.getValue().size());
+    }
+
+    @Test
     void addFilingToPatchKeepsOriginalCompanyNumberWhenKindIsNull() {
         FilingApi filingApi = new FilingApi();
         filingApi.setKind(null);
