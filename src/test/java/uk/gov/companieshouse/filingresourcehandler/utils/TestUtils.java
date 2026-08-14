@@ -2,9 +2,9 @@ package uk.gov.companieshouse.filingresourcehandler.utils;
 
 
 import accounts.transaction_closed;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.NonNull;
+import tools.jackson.databind.ObjectMapper;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Filing;
 import uk.gov.companieshouse.api.model.transaction.Resource;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TestUtils {
+
     // Common test constants for repeated values
     public static final String TEST_TRANSACTIONS_KEY = "/transactions/987654/limited-partnership/partnership/87qwerty";
     private static final String TEST_TRANSACTION_ID = "987654";
@@ -154,8 +155,8 @@ public class TestUtils {
     }
 
     /**
-     * Returns a transaction with three independent resources (appointment/1, appointment/2, appointment/3).
-     * Used by the "three resources" integration test scenario.
+     * Returns a transaction with three independent resources (appointment/1, appointment/2, appointment/3). Used by the "three
+     * resources" integration test scenario.
      */
     public static Transaction getTransactionWithThreeResources() {
         Transaction transaction = getTransaction();
@@ -211,6 +212,7 @@ public class TestUtils {
     }
 
     private record Result(Map<String, Filing> filings, Filing filing) {
+
     }
 
     public static ObjectMapper getObjectMapper() {
