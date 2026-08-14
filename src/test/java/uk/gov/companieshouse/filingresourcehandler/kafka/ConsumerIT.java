@@ -1,7 +1,6 @@
 package uk.gov.companieshouse.filingresourcehandler.kafka;
 
 import accounts.transaction_closed;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import tools.jackson.databind.ObjectMapper;
 import uk.gov.companieshouse.api.model.transaction.Transaction;
 
 import java.time.Duration;
@@ -129,7 +129,7 @@ class ConsumerIT extends AbstractKafkaIT {
     @ParameterizedTest
     @MethodSource("filingApiPaths")
     void shouldConsumeTransactionClosedMessagesAndProcessSuccessfullyWithPatch(String expectedFilingPath,
-                                                                               String filingRegex) throws Exception {
+            String filingRegex) throws Exception {
         // given
         byte[] message = writePayloadToBytes(getTransactionClosedMessage(), transaction_closed.class);
         Transaction transaction = getTransaction();

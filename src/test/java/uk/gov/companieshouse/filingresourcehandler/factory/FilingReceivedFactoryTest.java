@@ -7,13 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import uk.gov.companieshouse.api.model.transaction.Transaction;
 import uk.gov.companieshouse.filing.received.FilingReceived;
 import uk.gov.companieshouse.filing.received.PresenterRecord;
@@ -192,8 +194,8 @@ class FilingReceivedFactoryTest {
         transaction.setId("txn-no-keys");
         transaction.setClosedBy(TestUtils.getClosedByMap());
 
-        when(objectMapper.readValue(Mockito.eq("{}"), Mockito.<com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>>any()))
-                .thenReturn(java.util.Map.of("other_field", "x"));
+        when(objectMapper.readValue(Mockito.eq("{}"), Mockito.<TypeReference<Map<String, Object>>>any()))
+                .thenReturn(Map.of("other_field", "x"));
 
         FilingReceived filingReceived = factory.getFilingReceived(items, transaction);
 
@@ -214,7 +216,7 @@ class FilingReceivedFactoryTest {
         transaction.setId("txn-null-map");
         transaction.setClosedBy(TestUtils.getClosedByMap());
 
-        when(objectMapper.readValue(Mockito.eq("{}"), Mockito.<com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>>any()))
+        when(objectMapper.readValue(Mockito.eq("{}"), Mockito.<TypeReference<Map<String, Object>>>any()))
                 .thenReturn(null);
 
         FilingReceived filingReceived = factory.getFilingReceived(items, transaction);

@@ -6,7 +6,7 @@
     <parent>
         <groupId>uk.gov.companieshouse</groupId>
         <artifactId>companies-house-parent</artifactId>
-        <version>2.1.14</version>
+        <version>2.1.15</version>
         <relativePath/>
     </parent>
     <properties>
@@ -18,17 +18,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!--Companies House-->
-        <ch-dependency-bom.version>0.1.9</ch-dependency-bom.version>
-        <ch-test-bom.version>0.1.9</ch-test-bom.version>
-        <private-api-sdk-java.version>6.0.33</private-api-sdk-java.version>
+        <ch-dependency-bom.version>0.1.16</ch-dependency-bom.version>
+        <ch-test-bom.version>0.1.16</ch-test-bom.version>
+        <private-api-sdk-java.version>7.2.12</private-api-sdk-java.version>
         <!--External-->
         <spring.boot.version>4.1.0</spring.boot.version>
-        <testcontainers-bom.version>1.21.4</testcontainers-bom.version>
+        <testcontainers-bom.version>2.0.5</testcontainers-bom.version>
         <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
         <!--Plugin-->
         <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
-        <jib-maven-plugin.version>3.5.1</jib-maven-plugin.version>
-        <maven-dependency-plugin.version>3.10.0</maven-dependency-plugin.version>
+        <jib-maven-plugin.version>3.5.2</jib-maven-plugin.version>
         <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
         <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     </properties>
@@ -130,7 +129,7 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -165,11 +164,6 @@
                         <image>416670754337.dkr.ecr.eu-west-2.amazonaws.com/filing-resource-handler-java:latest</image>
                     </to>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>${maven-dependency-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -2,8 +2,6 @@ package uk.gov.companieshouse.filingresourcehandler.factory;
 
 import static uk.gov.companieshouse.filingresourcehandler.Application.NAMESPACE;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,6 +9,8 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import uk.gov.companieshouse.api.model.transaction.SubmittedBy;
 import uk.gov.companieshouse.api.model.transaction.Transaction;
 import uk.gov.companieshouse.filing.received.FilingReceived;
