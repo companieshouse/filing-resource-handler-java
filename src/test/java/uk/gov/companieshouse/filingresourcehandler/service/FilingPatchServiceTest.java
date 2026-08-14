@@ -1,8 +1,19 @@
 package uk.gov.companieshouse.filingresourcehandler.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getFiling;
+import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getFilingApi;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -12,18 +23,9 @@ import uk.gov.companieshouse.api.model.transaction.Filing;
 import uk.gov.companieshouse.filingresourcehandler.exception.NonRetryableException;
 import uk.gov.companieshouse.filingresourcehandler.factory.FilingFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getFiling;
-import static uk.gov.companieshouse.filingresourcehandler.utils.TestUtils.getFilingApi;
-
 @ExtendWith(MockitoExtension.class)
 class FilingPatchServiceTest {
+
     private static final String INSOLVENCY_KIND = "company-insolvency#test";
     private static final String MISSING_COMPANY_NUMBER_MESSAGE = "Missing company_number";
     private static final String ORIGINAL_COMPANY_NUMBER = "ORIGINAL";
@@ -125,6 +127,33 @@ class FilingPatchServiceTest {
         Assertions.assertTrue(exception.getMessage().contains(MISSING_COMPANY_NUMBER_MESSAGE));
     }
 
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "null", "''", "'   '"
+    }, nullValues = "null")
+    void addFilingToPatchPassesEmptyLinksMapWhenLinkIsNull(String link) {
+        when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
+
+        ArgumentCaptor<Map<String, String>> linksCaptor = ArgumentCaptor.captor();
+        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi(), SUBMISSION_ID, link, ORIGINAL_COMPANY_NUMBER);
+
+        verify(filingFactory).getFiling(any(), any(), linksCaptor.capture());
+        Assertions.assertTrue(linksCaptor.getValue().isEmpty());
+    }
+
+    @Test
+    void addFilingToPatchPassesResourceLinkInLinksMapWhenLinkIsProvided() {
+        when(filingFactory.getFiling(any(), any(), any())).thenReturn(getFiling());
+
+        ArgumentCaptor<Map<String, String>> linksCaptor = ArgumentCaptor.captor();
+        filingPatchService.addFilingToPatch(new HashMap<>(), getFilingApi(), SUBMISSION_ID, RESOURCE_LINK,
+                ORIGINAL_COMPANY_NUMBER);
+
+        verify(filingFactory).getFiling(any(), any(), linksCaptor.capture());
+        Assertions.assertEquals(RESOURCE_LINK, linksCaptor.getValue().get("resource"));
+        Assertions.assertEquals(1, linksCaptor.getValue().size());
+    }
 
     @Test
     void addFilingToPatchKeepsOriginalCompanyNumberWhenKindIsNull() {

@@ -13,6 +13,7 @@ import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import tools.jackson.databind.ObjectMapper;
+import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Transaction;
 
 import java.time.Duration;
@@ -21,9 +22,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.patch;
 import static com.github.tomakehurst.wiremock.client.WireMock.patchRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -265,5 +268,96 @@ class ConsumerIT extends AbstractKafkaIT {
                 .withQueryParam("resource", matching(ANY_MATCH))
                 .withQueryParam("company_name", matching(ANY_MATCH))
                 .withQueryParam("company_number", matching(ANY_MATCH)));
+    }
+
+    @Test
+    void shouldIncludeResourceLinkInPatchBodyWhenFilingIsProcessed() throws Exception {
+        // given — use accounts filing path which triggers a PATCH
+        String accountsFilingPath = "/transactions/987654/accounts/87qwerty=";
+        byte[] message = writePayloadToBytes(getTransactionClosedMessage(), transaction_closed.class);
+        Transaction transaction = getTransaction();
+        Map<String, String> resourceLinks = transaction.getResources().get(TEST_TRANSACTIONS_KEY).getLinks();
+        resourceLinks.put("resource", accountsFilingPath);
+        transaction.getResources().get(TEST_TRANSACTIONS_KEY).setLinks(resourceLinks);
+        ObjectMapper objectMapper = getObjectMapper();
+
+        String transactionString = objectMapper.writeValueAsString(transaction);
+        stubFor(get(TRANSACTION_URL)
+                .willReturn(aResponse()
+                        .withStatus(200).withBody(transactionString)));
+
+        stubFor(patch(urlPathEqualTo(TRANSACTION_URL))
+                .withQueryParam("force", matching("true"))
+                .willReturn(aResponse()
+                        .withStatus(204)));
+
+        stubFor(get(urlPathMatching(ACCOUNTS_REGEX))
+                .withHeader(X_REQUEST_ID, matching(ANY_MATCH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .withBody(objectMapper.writeValueAsString(getFilingApiList()))));
+
+        // when
+        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), PRODUCER_KEY, message));
+        if (!testConsumerAspect.getLatch().await(500, TimeUnit.SECONDS)) {
+            fail("Timed out waiting for latch");
+        }
+
+        // then — PATCH body must contain links.resource = accountsFilingPath (not empty string)
+        ConsumerRecords<?, ?> consumerRecords = KafkaTestUtils.getRecords(testConsumer, Duration.ofMillis(10000L), 1);
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_MAIN_TOPIC)).isOne();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_RETRY_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_ERROR_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_INVALID_TOPIC)).isZero();
+        WireMock.verify(1, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL))
+                .withRequestBody(matchingJsonPath("$..links.resource", containing(accountsFilingPath))));
+    }
+
+    @Test
+    void shouldOmitEmptyStringCostInPatchBody() throws Exception {
+        // given
+        String accountsFilingPath = "/transactions/987654/accounts/87qwerty=";
+        byte[] message = writePayloadToBytes(getTransactionClosedMessage(), transaction_closed.class);
+        Transaction transaction = getTransaction();
+        Map<String, String> resourceLinks = transaction.getResources().get(TEST_TRANSACTIONS_KEY).getLinks();
+        resourceLinks.put("resource", accountsFilingPath);
+        transaction.getResources().get(TEST_TRANSACTIONS_KEY).setLinks(resourceLinks);
+        ObjectMapper objectMapper = getObjectMapper();
+
+        FilingApi[] filingApis = getFilingApiList();
+        filingApis[0].setCost("");
+
+        String transactionString = objectMapper.writeValueAsString(transaction);
+        stubFor(get(TRANSACTION_URL)
+                .willReturn(aResponse()
+                        .withStatus(200).withBody(transactionString)));
+
+        stubFor(patch(urlPathEqualTo(TRANSACTION_URL))
+                .withQueryParam("force", matching("true"))
+                .willReturn(aResponse().withStatus(204)));
+
+        stubFor(get(urlPathMatching(ACCOUNTS_REGEX))
+                .withHeader(X_REQUEST_ID, matching(ANY_MATCH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .withBody(objectMapper.writeValueAsString(filingApis))));
+
+        // when
+        testProducer.send(new ProducerRecord<>(CONSUMER_MAIN_TOPIC, 0, System.currentTimeMillis(), PRODUCER_KEY, message));
+        if (!testConsumerAspect.getLatch().await(500, TimeUnit.SECONDS)) {
+            fail("Timed out waiting for latch");
+        }
+
+        // then
+        ConsumerRecords<?, ?> consumerRecords = KafkaTestUtils.getRecords(testConsumer, Duration.ofMillis(10000L), 1);
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_MAIN_TOPIC)).isOne();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_RETRY_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_ERROR_TOPIC)).isZero();
+        assertThat(recordsPerTopic(consumerRecords, CONSUMER_INVALID_TOPIC)).isZero();
+        WireMock.verify(1, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL)));
+        WireMock.verify(0, patchRequestedFor(urlEqualTo(TRANSACTION_PATCH_URL))
+                .withRequestBody(matching("(?s).*\\\"cost\\\"\\s*:\\s*\\\"\\\".*")));
     }
 }

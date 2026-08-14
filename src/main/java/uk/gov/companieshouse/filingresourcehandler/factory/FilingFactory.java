@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.filingresourcehandler.factory;
 
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -17,14 +18,18 @@ public class FilingFactory {
         }
 
         Filing patchFiling = new Filing();
-        patchFiling.setCompanyNumber(companyNumber);
+        if (companyNumber != null && !companyNumber.trim().isEmpty()) {
+            patchFiling.setCompanyNumber(companyNumber);
+        }
         patchFiling.setDescription(StringUtils.defaultString(filing.getDescription()));
         patchFiling.setDescriptionIdentifier(StringUtils.defaultString(filing.getDescriptionIdentifier()));
         patchFiling.setDescriptionValues(filing.getDescriptionValues());
-        patchFiling.setLinks(links);
+        patchFiling.setLinks(links != null ? links : new HashMap<>());
         patchFiling.setStatus(STATUS_PROCESSING);
         patchFiling.setType(StringUtils.defaultString(filing.getKind()));
-        patchFiling.setCost(StringUtils.defaultString(filing.getCost()));
+        if (filing.getCost() != null && !filing.getCost().trim().isEmpty()) {
+            patchFiling.setCost(filing.getCost());
+        }
         return patchFiling;
     }
 }

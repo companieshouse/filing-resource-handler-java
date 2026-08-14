@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Filing;
 import uk.gov.companieshouse.filingresourcehandler.utils.TestUtils;
@@ -63,14 +65,41 @@ class FilingFactoryTest {
         assertThat(filing.getType()).isEmpty();
     }
 
-    @Test
-    void testGetFilingDefaultsCostToEmptyStringWhenNull() {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "null", "''", "'   '", "'  \t  '"
+    }, nullValues = "null")
+    void testGetFilingDoesNotSetCostWhenNullOrEmpty(String cost) {
         FilingFactory factory = TestUtils.getFilingFactory();
         FilingApi filingApi = TestUtils.getFilingApi();
-        filingApi.setCost(null);
+        filingApi.setCost(cost);
 
         Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
 
-        assertThat(filing.getCost()).isEmpty();
+        assertThat(filing.getCost()).isNull();
+    }
+
+    @Test
+    void testGetFilingSetsCostWhenProvided() {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+        filingApi.setCost("10.00");
+
+        Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
+
+        assertThat(filing.getCost()).isEqualTo("10.00");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "null", "''", "'   '", "'  \t  '"
+    }, nullValues = "null")
+    void testGetFilingDoesNotSetCompanyNumberWhenNullOrEmpty(String companyNumber) {
+        FilingFactory factory = TestUtils.getFilingFactory();
+        FilingApi filingApi = TestUtils.getFilingApi();
+
+        Filing filing = factory.getFiling(filingApi, companyNumber, TestUtils.getLinks());
+
+        assertThat(filing.getCompanyNumber()).isNull();
     }
 }
