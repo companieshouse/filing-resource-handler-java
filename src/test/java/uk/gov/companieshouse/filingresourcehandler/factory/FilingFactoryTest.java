@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import uk.gov.companieshouse.api.model.filinggenerator.FilingApi;
 import uk.gov.companieshouse.api.model.transaction.Filing;
 import uk.gov.companieshouse.filingresourcehandler.utils.TestUtils;
@@ -63,33 +65,14 @@ class FilingFactoryTest {
         assertThat(filing.getType()).isEmpty();
     }
 
-    @Test
-    void testGetFilingDoesNotSetCostWhenNull() {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "null", "''", "'   '", "'  \t  '"
+    }, nullValues = "null")
+    void testGetFilingDoesNotSetCostWhenNullOrEmpty(String cost) {
         FilingFactory factory = TestUtils.getFilingFactory();
         FilingApi filingApi = TestUtils.getFilingApi();
-        filingApi.setCost(null);
-
-        Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
-
-        assertThat(filing.getCost()).isNull();
-    }
-
-    @Test
-    void testGetFilingDoesNotSetCostWhenEmpty() {
-        FilingFactory factory = TestUtils.getFilingFactory();
-        FilingApi filingApi = TestUtils.getFilingApi();
-        filingApi.setCost("");
-
-        Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
-
-        assertThat(filing.getCost()).isNull();
-    }
-
-    @Test
-    void testGetFilingDoesNotSetCostWhenBlank() {
-        FilingFactory factory = TestUtils.getFilingFactory();
-        FilingApi filingApi = TestUtils.getFilingApi();
-        filingApi.setCost("   ");
+        filingApi.setCost(cost);
 
         Filing filing = factory.getFiling(filingApi, COMPANY_NUMBER, TestUtils.getLinks());
 
@@ -107,42 +90,15 @@ class FilingFactoryTest {
         assertThat(filing.getCost()).isEqualTo("10.00");
     }
 
-    @Test
-    void testGetFilingDoesNotSetCompanyNumberWhenNull() {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "null", "''", "'   '", "'  \t  '"
+    }, nullValues = "null")
+    void testGetFilingDoesNotSetCompanyNumberWhenNullOrEmpty(String companyNumber) {
         FilingFactory factory = TestUtils.getFilingFactory();
         FilingApi filingApi = TestUtils.getFilingApi();
 
-        Filing filing = factory.getFiling(filingApi, null, TestUtils.getLinks());
-
-        assertThat(filing.getCompanyNumber()).isNull();
-    }
-
-    @Test
-    void testGetFilingDoesNotSetCompanyNumberWhenEmpty() {
-        FilingFactory factory = TestUtils.getFilingFactory();
-        FilingApi filingApi = TestUtils.getFilingApi();
-
-        Filing filing = factory.getFiling(filingApi, "", TestUtils.getLinks());
-
-        assertThat(filing.getCompanyNumber()).isNull();
-    }
-
-    @Test
-    void testGetFilingDoesNotSetCompanyNumberWhenBlank() {
-        FilingFactory factory = TestUtils.getFilingFactory();
-        FilingApi filingApi = TestUtils.getFilingApi();
-
-        Filing filing = factory.getFiling(filingApi, "   ", TestUtils.getLinks());
-
-        assertThat(filing.getCompanyNumber()).isNull();
-    }
-
-    @Test
-    void testGetFilingDoesNotSetCompanyNumberWhenTrimmedToEmpty() {
-        FilingFactory factory = TestUtils.getFilingFactory();
-        FilingApi filingApi = TestUtils.getFilingApi();
-
-        Filing filing = factory.getFiling(filingApi, "  \t  ", TestUtils.getLinks());
+        Filing filing = factory.getFiling(filingApi, companyNumber, TestUtils.getLinks());
 
         assertThat(filing.getCompanyNumber()).isNull();
     }

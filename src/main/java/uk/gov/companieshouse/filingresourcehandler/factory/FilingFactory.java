@@ -18,7 +18,9 @@ public class FilingFactory {
         }
 
         Filing patchFiling = new Filing();
-        patchFiling.setCompanyNumber(companyNumber);
+        if (companyNumber != null && !companyNumber.trim().isEmpty()) {
+            patchFiling.setCompanyNumber(companyNumber);
+        }
         patchFiling.setDescription(StringUtils.defaultString(filing.getDescription()));
         patchFiling.setDescriptionIdentifier(StringUtils.defaultString(filing.getDescriptionIdentifier()));
         patchFiling.setDescriptionValues(filing.getDescriptionValues());
