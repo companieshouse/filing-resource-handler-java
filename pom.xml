@@ -18,9 +18,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!--Companies House-->
-        <ch-dependency-bom.version>0.1.16</ch-dependency-bom.version>
-        <ch-test-bom.version>0.1.16</ch-test-bom.version>
-        <private-api-sdk-java.version>7.2.12</private-api-sdk-java.version>
+        <ch-dependency-bom.version>0.1.21</ch-dependency-bom.version>
+        <ch-test-bom.version>0.1.21</ch-test-bom.version>
+        <private-api-sdk-java.version>7.2.26</private-api-sdk-java.version>
         <!--External-->
         <spring.boot.version>4.1.0</spring.boot.version>
         <testcontainers-bom.version>2.0.5</testcontainers-bom.version>
@@ -28,8 +28,9 @@
         <!--Plugin-->
         <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
         <jib-maven-plugin.version>3.5.2</jib-maven-plugin.version>
-        <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
-        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
+        <spring-framework-bom.version>7.0.9</spring-framework-bom.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -49,6 +50,13 @@
                 <type>pom</type>
             </dependency>
             <!--External-->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring-framework-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
