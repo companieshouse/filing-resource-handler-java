@@ -6,7 +6,7 @@
     <parent>
         <groupId>uk.gov.companieshouse</groupId>
         <artifactId>companies-house-parent</artifactId>
-        <version>2.1.15</version>
+        <version>2.1.20</version>
         <relativePath/>
     </parent>
     <properties>
@@ -18,10 +18,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!--Companies House-->
-        <ch-dependency-bom.version>0.1.22</ch-dependency-bom.version>
-        <ch-test-bom.version>0.1.22</ch-test-bom.version>
+        <ch-dependency-bom.version>0.1.27</ch-dependency-bom.version>
+        <ch-test-bom.version>0.1.27</ch-test-bom.version>
         <private-api-sdk-java.version>7.2.28</private-api-sdk-java.version>
-        <kafka-models.version>3.0.40</kafka-models.version>
         <!--External-->
         <spring.boot.version>4.1.1</spring.boot.version>
         <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
@@ -35,12 +34,6 @@
     </properties>
     <dependencyManagement>
         <dependencies>
-            <!-- Resolves CVE-2026-59949 - will be fixed in kafka-clients 4.3.2 release -->
-            <dependency>
-                <groupId>at.yawk.lz4</groupId>
-                <artifactId>lz4-java</artifactId>
-                <version>1.11.2</version>
-            </dependency>
             <!--Companies House-->
             <dependency>
                 <groupId>uk.gov.companieshouse</groupId>
@@ -78,7 +71,12 @@
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>kafka-models</artifactId>
-            <version>${kafka-models.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.xerial.snappy</groupId>
+                    <artifactId>snappy-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
@@ -135,6 +133,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-kafka-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.xerial.snappy</groupId>
+                    <artifactId>snappy-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
