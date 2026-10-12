@@ -27,7 +27,7 @@ class FilingFactoryTest {
         assertThat(filing.getDescriptionIdentifier()).isEqualTo("id");
         assertThat(filing.getDescriptionValues()).isEmpty();
         assertThat(filing.getLinks()).isEqualTo(links);
-        assertThat(filing.getStatus()).isEqualTo("processing");
+        assertThat(filing.getStatus()).isEqualTo("received");
         assertThat(filing.getType()).isEqualTo("test-kind");
         assertThat(filing.getCost()).isEqualTo("10.00");
     }

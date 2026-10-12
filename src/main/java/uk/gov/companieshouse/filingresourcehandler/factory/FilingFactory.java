@@ -10,7 +10,7 @@ import uk.gov.companieshouse.api.model.transaction.Filing;
 @Component
 public class FilingFactory {
 
-    private static final String STATUS_PROCESSING = "processing";
+    private static final String STATUS_RECEIVED = "received";
 
     public Filing getFiling(FilingApi filing, String companyNumber, Map<String, String> links) {
         if (filing == null) {
@@ -25,7 +25,7 @@ public class FilingFactory {
         patchFiling.setDescriptionIdentifier(StringUtils.defaultString(filing.getDescriptionIdentifier()));
         patchFiling.setDescriptionValues(filing.getDescriptionValues());
         patchFiling.setLinks(links != null ? links : new HashMap<>());
-        patchFiling.setStatus(STATUS_PROCESSING);
+        patchFiling.setStatus(STATUS_RECEIVED);
         patchFiling.setType(StringUtils.defaultString(filing.getKind()));
         if (filing.getCost() != null && !filing.getCost().trim().isEmpty()) {
             patchFiling.setCost(filing.getCost());
