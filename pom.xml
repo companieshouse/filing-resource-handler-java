@@ -26,6 +26,7 @@
         <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
         <opentelemetry-bom.version>2.30.0</opentelemetry-bom.version>
         <opentelemetry-logback-appender.version>2.30.0-alpha</opentelemetry-logback-appender.version>
+        <kafka-clients.version>4.3.0</kafka-clients.version>
         <!--Plugin-->
         <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
         <jib-maven-plugin.version>3.5.2</jib-maven-plugin.version>
@@ -63,6 +64,18 @@
                 <version>${opentelemetry-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!-- Override transitive kafka-clients to remediate CVE-2026-41115 (CVSS 4.3) in 4.2.1 -->
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka-clients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka-clients.version}</version>
+                <classifier>test</classifier>
             </dependency>
         </dependencies>
     </dependencyManagement>
